@@ -12,6 +12,17 @@
 
     * { box-sizing: border-box; }
 
+    /* Remove blue selection highlight */
+    ::selection {
+      background: #000;
+      color: #fff;
+    }
+
+    input::selection {
+      background: #000;
+      color: #fff;
+    }
+
     :root {
       --window-bezel:
         1px 2px #111,
@@ -152,15 +163,22 @@
     }
 
     .color-swatch-btn {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #999;
+      width: 18px;
+      height: 18px;
+      border: 1px solid #000;
       cursor: pointer;
       padding: 0;
+      margin: 2px;
     }
 
-    .color-swatch-btn:hover { border-color: #000; }
-    .color-swatch-btn.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+    .color-swatch-btn:hover {
+      outline: 2px solid #000;
+      outline-offset: 1px;
+    }
+    .color-swatch-btn.active {
+      outline: 2px solid #000;
+      outline-offset: 1px;
+    }
 
     .clear-btn {
       font-family: inherit;
@@ -170,6 +188,119 @@
       background: #ddd;
       box-shadow: var(--button-bezel);
       cursor: pointer;
+    }
+
+    .sort-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sort-label {
+      font-size: 11px;
+    }
+
+    .sort-buttons {
+      display: flex;
+      gap: 2px;
+    }
+
+    .sort-btn {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+
+    .sort-btn:hover { background: #eee; }
+    .sort-btn.active {
+      background: #000;
+      color: #fff;
+      box-shadow: inset 1px 1px 2px #000;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 0;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      background: #ccc;
+    }
+
+    .page-arrow {
+      font-family: inherit;
+      font-size: 10px;
+      width: 20px;
+      height: 18px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-arrow:hover { background: #eee; }
+    .page-arrow:disabled { opacity: 0.5; cursor: default; }
+    .page-arrow:active { box-shadow: inset 1px 1px 2px #000; }
+
+    .page-number {
+      font-family: inherit;
+      font-size: 11px;
+      min-width: 40px;
+      height: 18px;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      background: #fff;
+      text-align: center;
+      line-height: 16px;
+      box-shadow: inset 1px 1px 0 #999;
+    }
+
+    /* Mac OS 8 scrollbar */
+    .content-area::-webkit-scrollbar {
+      width: 16px;
+      height: 16px;
+    }
+
+    .content-area::-webkit-scrollbar-track {
+      background: #ccc;
+      border-left: 1px solid #999;
+    }
+
+    .content-area::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+    }
+
+    .content-area::-webkit-scrollbar-thumb:hover {
+      background: #eee;
+    }
+
+    .content-area::-webkit-scrollbar-button {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+      height: 16px;
+      width: 16px;
+    }
+
+    .content-area::-webkit-scrollbar-button:vertical:decrement {
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path d="M4 2L1 6h6z" fill="%23000"/></svg>') center no-repeat;
+    }
+
+    .content-area::-webkit-scrollbar-button:vertical:increment {
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path d="M4 6L1 2h6z" fill="%23000"/></svg>') center no-repeat;
+    }
+
+    .content-area::-webkit-scrollbar-corner {
+      background: #ccc;
     }
 
     .content-area {
@@ -356,6 +487,15 @@
       <div class="search-row">
         <input type="text" id="search" placeholder="Search...">
         <button class="clear-btn" id="clear-filters">Clear</button>
+        <div class="sort-row">
+          <span class="sort-label">Sort:</span>
+          <div class="sort-buttons" id="sort-buttons">
+            <button class="sort-btn active" data-sort="name">Name</button>
+            <button class="sort-btn" data-sort="collection">Collection</button>
+            <button class="sort-btn" data-sort="category">Category</button>
+            <button class="sort-btn" data-sort="vibe">Vibe</button>
+          </div>
+        </div>
         <div class="stats">
           <span id="count">0</span> / <span id="total">0</span> icons
         </div>
@@ -383,6 +523,8 @@
         <div class="loading">Loading icons...</div>
       </div>
     </div>
+
+    <div class="pagination" id="pagination"></div>
 
     <div class="status-bar">
       <span id="status-text">Ready</span>
@@ -414,6 +556,8 @@
     let tagsData = null;
     let activeFilters = { primary: null, vibe: null, secondary: null, color: null };
     const expandedGroups = { primary: false, vibe: false, secondary: false };
+    let currentPage = 1;
+    const PAGE_SIZE = 500;
 
     function countValues(field, isArray = false, minCount = 1) {
       const counts = {};
@@ -484,6 +628,7 @@
             activeFilters.color = color;
             btn.classList.add('active');
           }
+          currentPage = 1;
           render();
         };
         container.appendChild(btn);
@@ -532,6 +677,7 @@
         activeFilters[type] = value;
         btn.classList.add('active');
       }
+      currentPage = 1;
       render();
     }
 
@@ -539,13 +685,14 @@
       activeFilters = { primary: null, vibe: null, secondary: null, color: null };
       document.querySelectorAll('.tag.active, .color-swatch-btn.active').forEach(t => t.classList.remove('active'));
       document.getElementById('search').value = '';
+      currentPage = 1;
       render();
     }
 
     function getDisplayName(icon) {
       // Priority: display_name > description > parsed filename
-      if (icon.display_name) return icon.display_name;
-      if (icon.description) return icon.description;
+      if (icon.display_name && icon.display_name.trim()) return icon.display_name;
+      if (icon.description && icon.description.trim()) return icon.description;
 
       // Fallback: parse from filename
       let name = icon.file.replace('.png', '');
@@ -620,13 +767,72 @@
       document.getElementById('selected-name').textContent = getDisplayName(icon);
     }
 
+    let currentSort = 'name';
+
+    function sortIcons(icons) {
+      const sortBy = currentSort;
+      return [...icons].sort((a, b) => {
+        let aVal, bVal;
+        switch (sortBy) {
+          case 'name':
+            aVal = (a.display_name || a.description || a.file).toLowerCase();
+            bVal = (b.display_name || b.description || b.file).toLowerCase();
+            break;
+          case 'collection':
+            aVal = (a.collection || '').toLowerCase();
+            bVal = (b.collection || '').toLowerCase();
+            break;
+          case 'category':
+            aVal = (a.primary || '').toLowerCase();
+            bVal = (b.primary || '').toLowerCase();
+            break;
+          case 'vibe':
+            aVal = (a.vibe || '').toLowerCase();
+            bVal = (b.vibe || '').toLowerCase();
+            break;
+          default:
+            aVal = a.file;
+            bVal = b.file;
+        }
+        return aVal.localeCompare(bVal);
+      });
+    }
+
+    function renderPagination(totalItems) {
+      const container = document.getElementById('pagination');
+      container.replaceChildren();
+
+      const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+      if (totalPages <= 1) return;
+
+      // Mac OS 8 style: ◁ | page | ▷
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'page-arrow';
+      prevBtn.textContent = '◁';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { currentPage--; render(); };
+      container.appendChild(prevBtn);
+
+      const pageNum = document.createElement('div');
+      pageNum.className = 'page-number';
+      pageNum.textContent = currentPage;
+      container.appendChild(pageNum);
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'page-arrow';
+      nextBtn.textContent = '▷';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { currentPage++; render(); };
+      container.appendChild(nextBtn);
+    }
+
     function render() {
       if (!tagsData) return;
 
       const search = document.getElementById('search').value.toLowerCase();
       const grid = document.getElementById('grid');
 
-      const filtered = tagsData.icons.filter(icon => {
+      let filtered = tagsData.icons.filter(icon => {
         if (activeFilters.primary && icon.primary !== activeFilters.primary) return false;
         if (activeFilters.vibe && icon.vibe !== activeFilters.vibe) return false;
         if (activeFilters.secondary && !(icon.secondary || []).includes(activeFilters.secondary)) return false;
@@ -650,6 +856,15 @@
         return true;
       });
 
+      // Sort
+      filtered = sortIcons(filtered);
+
+      // Pagination
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageIcons = filtered.slice(start, start + PAGE_SIZE);
+
       grid.replaceChildren();
 
       if (filtered.length === 0) {
@@ -658,23 +873,27 @@
         empty.textContent = 'No icons match your filters';
         grid.appendChild(empty);
       } else {
-        const toRender = filtered.slice(0, 500);
-        toRender.forEach(icon => grid.appendChild(createIconCard(icon)));
-
-        if (filtered.length > 500) {
-          const more = document.createElement('div');
-          more.className = 'loading';
-          more.textContent = 'Showing 500 of ' + filtered.length + '. Refine search.';
-          grid.appendChild(more);
-        }
+        pageIcons.forEach(icon => grid.appendChild(createIconCard(icon)));
       }
 
+      renderPagination(filtered.length);
       document.getElementById('count').textContent = filtered.length.toLocaleString();
       document.getElementById('status-text').textContent = filtered.length + ' items';
     }
 
-    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
     document.getElementById('clear-filters').addEventListener('click', clearFilters);
+
+    // Sort buttons
+    document.getElementById('sort-buttons').addEventListener('click', (e) => {
+      if (e.target.classList.contains('sort-btn')) {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentSort = e.target.dataset.sort;
+        currentPage = 1;
+        render();
+      }
+    });
 
     loadTags();
   </script>

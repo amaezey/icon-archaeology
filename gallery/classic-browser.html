@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Icon Archive</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; }
+
+    :root {
+      --window-bezel:
+        1px 2px #111,
+        inset 1px 1px 0px 0px #fff,
+        inset -1px -1px 0px 0px #999;
+      --inner-bezel:
+        -1px -1px 0px 0px #999,
+        1px 1px 0px 0px #fff,
+        inset 1px 1px 0px 0px #fff,
+        inset -1px -1px 0px 0px #999;
+      --button-bezel:
+        inset -1px -1px 0px 0px #777,
+        inset -2px -2px 0px 0px #aaa,
+        inset 1px 1px 0px 0px #ddd,
+        inset 2px 2px 0px 0px #fff;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-image: url("img/patterns/128.png");
+      background-repeat: repeat;
+      font-family: 'ChicagoFLF', Geneva, 'Lucida Grande', sans-serif;
+      font-size: 12px;
+    }
+
+    .window {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      border: 1px solid #111;
+      background: #ccc;
+      box-shadow: var(--window-bezel);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-bar {
+      display: flex;
+      align-items: center;
+      padding: 2px 4px;
+      background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+      border-bottom: 1px solid #999;
+    }
+
+    .title-bar .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-box {
+      width: 13px;
+      height: 13px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+    }
+
+    .title-bar h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: normal;
+      margin: 0;
+    }
+
+    .toolbar {
+      padding: 8px;
+      background: #ccc;
+      border-bottom: 1px solid #999;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 3px 6px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #999;
+      width: 200px;
+    }
+
+    .stats {
+      margin-left: auto;
+      font-size: 11px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: #333;
+    }
+
+    .tag {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+
+    .tag:hover { background: #eee; }
+
+    .tag:active, .tag.active {
+      background: #000;
+      color: #fff;
+      box-shadow: inset 1px 1px 2px #000;
+    }
+
+    .tag .count { opacity: 0.6; font-size: 9px; }
+
+    .toggle-btn {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 2px 5px;
+      border: 1px solid #666;
+      background: #ccc;
+      cursor: pointer;
+    }
+
+    .color-swatch-btn {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #999;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .color-swatch-btn:hover { border-color: #000; }
+    .color-swatch-btn.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+
+    .clear-btn {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 2px 8px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow: auto;
+      margin: 4px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #999;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 4px;
+    }
+
+    .icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .icon:hover {
+      background: #ddd;
+      border: 1px dotted #000;
+    }
+
+    .icon.selected {
+      background: #000;
+      color: #fff;
+    }
+
+    .icon.selected .name { color: #fff; }
+
+    .icon img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .icon .name {
+      font-size: 9px;
+      text-align: center;
+      margin-top: 4px;
+      max-width: 90px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.2;
+      max-height: 2.4em;
+    }
+
+    .loading, .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    #detail {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 240px;
+      border: 1px solid #111;
+      background: #ccc;
+      box-shadow: var(--window-bezel);
+      display: none;
+    }
+
+    #detail.visible { display: block; }
+
+    #detail .title-bar {
+      padding: 2px 4px;
+      cursor: default;
+    }
+
+    #detail .detail-content {
+      margin: 4px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #999;
+    }
+
+    #detail img {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      display: block;
+      margin: 0 auto 8px;
+    }
+
+    #detail .name {
+      font-weight: bold;
+      font-size: 11px;
+      margin-bottom: 4px;
+      word-break: break-all;
+      text-align: center;
+    }
+
+    #detail .description {
+      font-style: italic;
+      font-size: 11px;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    #detail .detail-row {
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    #detail .detail-row span:first-child { color: #666; }
+
+    #detail .colors {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      justify-content: center;
+    }
+
+    #detail .color-swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #000;
+    }
+
+    #detail .breadcrumb {
+      font-size: 9px;
+      color: #666;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    #detail .download-link {
+      display: block;
+      text-align: center;
+      margin-top: 8px;
+      font-size: 10px;
+      padding: 3px 8px;
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: var(--button-bezel);
+      text-decoration: none;
+      color: #000;
+    }
+
+    #detail .download-link:hover {
+      background: #eee;
+    }
+
+    .status-bar {
+      padding: 2px 8px;
+      background: #ccc;
+      border-top: 1px solid #fff;
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="title-bar">
+      <div class="controls">
+        <div class="control-box"></div>
+      </div>
+      <h1>Icon Archive</h1>
+      <div class="controls">
+        <div class="control-box"></div>
+        <div class="control-box"></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-row">
+        <input type="text" id="search" placeholder="Search...">
+        <button class="clear-btn" id="clear-filters">Clear</button>
+        <div class="stats">
+          <span id="count">0</span> / <span id="total">0</span> icons
+        </div>
+      </div>
+      <div class="filters">
+        <span class="filter-label">Category:</span>
+        <div class="filter-group" id="primary-filters"></div>
+      </div>
+      <div class="filters">
+        <span class="filter-label">Theme:</span>
+        <div class="filter-group" id="secondary-filters"></div>
+      </div>
+      <div class="filters">
+        <span class="filter-label">Vibe:</span>
+        <div class="filter-group" id="vibe-filters"></div>
+      </div>
+      <div class="filters">
+        <span class="filter-label">Color:</span>
+        <div class="filter-group" id="color-filters"></div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="grid" id="grid">
+        <div class="loading">Loading icons...</div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="status-text">Ready</span>
+      <span id="selected-name"></span>
+    </div>
+  </div>
+
+  <div id="detail">
+    <div class="title-bar">
+      <h1>Info</h1>
+    </div>
+    <div class="detail-content">
+      <img src="" alt="">
+      <div class="name"></div>
+      <div class="description"></div>
+      <div class="breadcrumb"></div>
+      <div class="detail-row"><span>Category: </span><span class="primary-val"></span></div>
+      <div class="detail-row"><span>Theme: </span><span class="secondary-val"></span></div>
+      <div class="detail-row"><span>Vibe: </span><span class="vibe-val"></span></div>
+      <div class="colors"></div>
+      <a class="download-link" href="" download>Download</a>
+    </div>
+  </div>
+
+  <script>
+    const ICONS_BASE = '../../Inspo space/public/icons/extracted-transparent';
+    const TAGS_FILE = '../tags.json';
+
+    let tagsData = null;
+    let activeFilters = { primary: null, vibe: null, secondary: null, color: null };
+    const expandedGroups = { primary: false, vibe: false, secondary: false };
+
+    function countValues(field, isArray = false, minCount = 1) {
+      const counts = {};
+      tagsData.icons.forEach(icon => {
+        if (isArray) {
+          (icon[field] || []).forEach(val => {
+            if (val) counts[val] = (counts[val] || 0) + 1;
+          });
+        } else {
+          const val = icon[field];
+          if (val) counts[val] = (counts[val] || 0) + 1;
+        }
+      });
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .filter(([_, count]) => count >= minCount);
+    }
+
+    async function loadTags() {
+      try {
+        const response = await fetch(TAGS_FILE);
+        tagsData = await response.json();
+        document.getElementById('total').textContent = tagsData.icons.length.toLocaleString();
+        document.getElementById('status-text').textContent = 'Loaded ' + tagsData.icons.length + ' icons';
+        buildFilters();
+        render();
+      } catch (e) {
+        document.getElementById('grid').textContent = 'Could not load tags.json';
+      }
+    }
+
+    function buildFilters() {
+      buildFilterGroup('primary', 'primary-filters', false, 15);
+      buildFilterGroup('vibe', 'vibe-filters', false, 8);
+      buildFilterGroup('secondary', 'secondary-filters', true, 8);
+      buildColorFilters();
+    }
+
+    function buildColorFilters() {
+      const container = document.getElementById('color-filters');
+      container.replaceChildren();
+
+      // Count colors
+      const colorCounts = {};
+      tagsData.icons.forEach(icon => {
+        (icon.colors || []).forEach(color => {
+          if (color) colorCounts[color] = (colorCounts[color] || 0) + 1;
+        });
+      });
+
+      // Sort by count and take top colors
+      const topColors = Object.entries(colorCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 16);
+
+      topColors.forEach(([color, count]) => {
+        const btn = document.createElement('button');
+        btn.className = 'color-swatch-btn';
+        if (activeFilters.color === color) btn.classList.add('active');
+        btn.style.background = color;
+        btn.title = color + ' (' + count + ')';
+        btn.onclick = () => {
+          if (activeFilters.color === color) {
+            activeFilters.color = null;
+            btn.classList.remove('active');
+          } else {
+            document.querySelectorAll('#color-filters .color-swatch-btn').forEach(b => b.classList.remove('active'));
+            activeFilters.color = color;
+            btn.classList.add('active');
+          }
+          render();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function buildFilterGroup(field, containerId, isArray, initialCount) {
+      const container = document.getElementById(containerId);
+      container.replaceChildren();
+
+      const allValues = countValues(field, isArray, 1);
+      const expanded = expandedGroups[field];
+      const visibleValues = expanded ? allValues : allValues.slice(0, initialCount);
+
+      visibleValues.forEach(([val, count]) => {
+        const btn = document.createElement('button');
+        btn.className = 'tag';
+        if (activeFilters[field] === val) btn.classList.add('active');
+        btn.textContent = val;
+        const countSpan = document.createElement('span');
+        countSpan.className = 'count';
+        countSpan.textContent = ' (' + count + ')';
+        btn.appendChild(countSpan);
+        btn.onclick = () => toggleFilter(field, val, btn);
+        container.appendChild(btn);
+      });
+
+      if (allValues.length > initialCount) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'toggle-btn';
+        toggleBtn.textContent = expanded ? 'less' : '+' + (allValues.length - initialCount);
+        toggleBtn.onclick = () => {
+          expandedGroups[field] = !expandedGroups[field];
+          buildFilterGroup(field, containerId, isArray, initialCount);
+        };
+        container.appendChild(toggleBtn);
+      }
+    }
+
+    function toggleFilter(type, value, btn) {
+      if (activeFilters[type] === value) {
+        activeFilters[type] = null;
+        btn.classList.remove('active');
+      } else {
+        document.querySelectorAll('#' + type + '-filters .tag').forEach(t => t.classList.remove('active'));
+        activeFilters[type] = value;
+        btn.classList.add('active');
+      }
+      render();
+    }
+
+    function clearFilters() {
+      activeFilters = { primary: null, vibe: null, secondary: null, color: null };
+      document.querySelectorAll('.tag.active, .color-swatch-btn.active').forEach(t => t.classList.remove('active'));
+      document.getElementById('search').value = '';
+      render();
+    }
+
+    function getDisplayName(icon) {
+      // Priority: display_name > description > parsed filename
+      if (icon.display_name && icon.display_name.trim()) return icon.display_name;
+      if (icon.description && icon.description.trim()) return icon.description;
+
+      // Fallback: parse from filename
+      let name = icon.file.replace('.png', '');
+      name = name.replace(/---?\d+$/, '').replace(/--item-icon$/, '');
+
+      if (name.includes('--')) {
+        const parts = name.split('--');
+        for (let i = parts.length - 1; i >= 0; i--) {
+          if (parts[i] && !/^-+$/.test(parts[i])) {
+            name = parts[i];
+            break;
+          }
+        }
+      }
+
+      name = name.replace(/^-+/, '').replace(/-+$/, '');
+      name = name.replace(/[-_]+/g, ' ').trim();
+
+      if (!name || /^\d+$/.test(name)) return '?';
+      return name;
+    }
+
+    function createIconCard(icon) {
+      const div = document.createElement('div');
+      div.className = 'icon';
+
+      const img = document.createElement('img');
+      img.src = ICONS_BASE + '/' + icon.file;
+      img.alt = icon.file;
+      img.loading = 'lazy';
+
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = getDisplayName(icon);
+      name.title = icon.description || (icon.path ? icon.path.join(' / ') : icon.file);
+
+      div.appendChild(img);
+      div.appendChild(name);
+      div.onclick = () => showDetail(icon, div);
+      return div;
+    }
+
+    function showDetail(icon, element) {
+      document.querySelectorAll('.icon.selected').forEach(el => el.classList.remove('selected'));
+      if (element) element.classList.add('selected');
+
+      const detail = document.getElementById('detail');
+      const imgSrc = ICONS_BASE + '/' + icon.file;
+      detail.querySelector('img').src = imgSrc;
+      detail.querySelector('.name').textContent = getDisplayName(icon);
+      detail.querySelector('.description').textContent = icon.description || '';
+      detail.querySelector('.breadcrumb').textContent = icon.path ? icon.path.join(' > ') : (icon.collection || '');
+      detail.querySelector('.primary-val').textContent = icon.primary;
+      detail.querySelector('.secondary-val').textContent = (icon.secondary || []).join(', ') || 'none';
+      detail.querySelector('.vibe-val').textContent = icon.vibe || 'none';
+
+      const colorsDiv = detail.querySelector('.colors');
+      colorsDiv.replaceChildren();
+      (icon.colors || []).forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.background = color;
+        swatch.title = color;
+        colorsDiv.appendChild(swatch);
+      });
+
+      // Download link
+      detail.querySelector('.download-link').href = imgSrc;
+      detail.querySelector('.download-link').download = (icon.display_name || getDisplayName(icon)) + '.png';
+
+      detail.classList.add('visible');
+      document.getElementById('selected-name').textContent = getDisplayName(icon);
+    }
+
+    function render() {
+      if (!tagsData) return;
+
+      const search = document.getElementById('search').value.toLowerCase();
+      const grid = document.getElementById('grid');
+
+      const filtered = tagsData.icons.filter(icon => {
+        if (activeFilters.primary && icon.primary !== activeFilters.primary) return false;
+        if (activeFilters.vibe && icon.vibe !== activeFilters.vibe) return false;
+        if (activeFilters.secondary && !(icon.secondary || []).includes(activeFilters.secondary)) return false;
+        if (activeFilters.color && !(icon.colors || []).includes(activeFilters.color)) return false;
+
+        if (search) {
+          const haystack = [
+            icon.file,
+            icon.display_name || '',
+            icon.collection || '',
+            icon.primary,
+            icon.vibe,
+            icon.description || '',
+            ...(icon.secondary || []),
+            ...(icon.colors || []),
+            ...(icon.path || [])
+          ].join(' ').toLowerCase();
+          if (!haystack.includes(search)) return false;
+        }
+
+        return true;
+      });
+
+      grid.replaceChildren();
+
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No icons match your filters';
+        grid.appendChild(empty);
+      } else {
+        const toRender = filtered.slice(0, 500);
+        toRender.forEach(icon => grid.appendChild(createIconCard(icon)));
+
+        if (filtered.length > 500) {
+          const more = document.createElement('div');
+          more.className = 'loading';
+          more.textContent = 'Showing 500 of ' + filtered.length + '. Refine search.';
+          grid.appendChild(more);
+        }
+      }
+
+      document.getElementById('count').textContent = filtered.length.toLocaleString();
+      document.getElementById('status-text').textContent = filtered.length + ' items';
+    }
+
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('clear-filters').addEventListener('click', clearFilters);
+
+    loadTags();
+  </script>
+</body>
+</html>
