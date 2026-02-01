@@ -617,11 +617,11 @@
       </div>
       <div class="filters">
         <span class="filter-label">Category:</span>
-        <div class="filter-group" id="primary-filters"></div>
+        <div class="filter-group" id="category-filters"></div>
       </div>
       <div class="filters">
         <span class="filter-label">Theme:</span>
-        <div class="filter-group" id="secondary-filters"></div>
+        <div class="filter-group" id="theme-filters"></div>
       </div>
       <div class="filters">
         <span class="filter-label">Vibe:</span>
@@ -669,8 +669,8 @@
     const TAGS_FILE = 'tags.json';
 
     let tagsData = null;
-    let activeFilters = { primary: null, vibe: null, secondary: null, color: null };
-    const expandedGroups = { primary: false, vibe: false, secondary: false };
+    let activeFilters = { category: null, vibe: null, theme: null, color: null };
+    const expandedGroups = { category: false, vibe: false, theme: false };
     let currentPage = 1;
     const PAGE_SIZE = 500;
 
@@ -705,9 +705,9 @@
     }
 
     function buildFilters() {
-      buildFilterGroup('primary', 'primary-filters', false, 15);
-      buildFilterGroup('vibe', 'vibe-filters', false, 8);
-      buildFilterGroup('secondary', 'secondary-filters', true, 8);
+      buildFilterGroup('category', 'category-filters', 'category', false, 15);
+      buildFilterGroup('vibes', 'vibe-filters', 'vibe', true, 10);
+      buildFilterGroup('themes', 'theme-filters', 'theme', true, 15);
       buildColorFilters();
     }
 
@@ -750,24 +750,24 @@
       });
     }
 
-    function buildFilterGroup(field, containerId, isArray, initialCount) {
+    function buildFilterGroup(field, containerId, filterKey, isArray, initialCount) {
       const container = document.getElementById(containerId);
       container.replaceChildren();
 
       const allValues = countValues(field, isArray, 1);
-      const expanded = expandedGroups[field];
+      const expanded = expandedGroups[filterKey];
       const visibleValues = expanded ? allValues : allValues.slice(0, initialCount);
 
       visibleValues.forEach(([val, count]) => {
         const btn = document.createElement('button');
         btn.className = 'tag';
-        if (activeFilters[field] === val) btn.classList.add('active');
+        if (activeFilters[filterKey] === val) btn.classList.add('active');
         btn.textContent = val;
         const countSpan = document.createElement('span');
         countSpan.className = 'count';
         countSpan.textContent = ' (' + count + ')';
         btn.appendChild(countSpan);
-        btn.onclick = () => toggleFilter(field, val, btn);
+        btn.onclick = () => toggleFilter(filterKey, val, btn, containerId);
         container.appendChild(btn);
       });
 
@@ -776,19 +776,19 @@
         toggleBtn.className = 'toggle-btn';
         toggleBtn.textContent = expanded ? 'less' : '+' + (allValues.length - initialCount);
         toggleBtn.onclick = () => {
-          expandedGroups[field] = !expandedGroups[field];
-          buildFilterGroup(field, containerId, isArray, initialCount);
+          expandedGroups[filterKey] = !expandedGroups[filterKey];
+          buildFilterGroup(field, containerId, filterKey, isArray, initialCount);
         };
         container.appendChild(toggleBtn);
       }
     }
 
-    function toggleFilter(type, value, btn) {
+    function toggleFilter(type, value, btn, containerId) {
       if (activeFilters[type] === value) {
         activeFilters[type] = null;
         btn.classList.remove('active');
       } else {
-        document.querySelectorAll('#' + type + '-filters .tag').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#' + containerId + ' .tag').forEach(t => t.classList.remove('active'));
         activeFilters[type] = value;
         btn.classList.add('active');
       }
@@ -797,7 +797,7 @@
     }
 
     function clearFilters() {
-      activeFilters = { primary: null, vibe: null, secondary: null, color: null };
+      activeFilters = { category: null, vibe: null, theme: null, color: null };
       document.querySelectorAll('.tag.active, .color-swatch-btn.active').forEach(t => t.classList.remove('active'));
       document.getElementById('search').value = '';
       currentPage = 1;
@@ -860,9 +860,9 @@
       detail.querySelector('.name').textContent = getDisplayName(icon);
       detail.querySelector('.description').textContent = icon.description || '';
       detail.querySelector('.breadcrumb').textContent = icon.path ? icon.path.join(' > ') : (icon.collection || '');
-      detail.querySelector('.primary-val').textContent = icon.primary;
-      detail.querySelector('.secondary-val').textContent = (icon.secondary || []).join(', ') || 'none';
-      detail.querySelector('.vibe-val').textContent = icon.vibe || 'none';
+      detail.querySelector('.primary-val').textContent = icon.category || icon.primary;
+      detail.querySelector('.secondary-val').textContent = (icon.themes || icon.secondary || []).join(', ') || 'none';
+      detail.querySelector('.vibe-val').textContent = (icon.vibes || [icon.vibe]).join(', ') || 'none';
 
       const colorsDiv = detail.querySelector('.colors');
       colorsDiv.replaceChildren();
@@ -898,12 +898,12 @@
             bVal = (b.collection || '').toLowerCase();
             break;
           case 'category':
-            aVal = (a.primary || '').toLowerCase();
-            bVal = (b.primary || '').toLowerCase();
+            aVal = (a.category || a.primary || '').toLowerCase();
+            bVal = (b.category || b.primary || '').toLowerCase();
             break;
           case 'vibe':
-            aVal = (a.vibe || '').toLowerCase();
-            bVal = (b.vibe || '').toLowerCase();
+            aVal = ((a.vibes || [a.vibe])[0] || '').toLowerCase();
+            bVal = ((b.vibes || [b.vibe])[0] || '').toLowerCase();
             break;
           default:
             aVal = a.file;
@@ -948,9 +948,9 @@
       const grid = document.getElementById('grid');
 
       let filtered = tagsData.icons.filter(icon => {
-        if (activeFilters.primary && icon.primary !== activeFilters.primary) return false;
-        if (activeFilters.vibe && icon.vibe !== activeFilters.vibe) return false;
-        if (activeFilters.secondary && !(icon.secondary || []).includes(activeFilters.secondary)) return false;
+        if (activeFilters.category && (icon.category || icon.primary) !== activeFilters.category) return false;
+        if (activeFilters.vibe && !(icon.vibes || [icon.vibe]).includes(activeFilters.vibe)) return false;
+        if (activeFilters.theme && !(icon.themes || icon.secondary || []).includes(activeFilters.theme)) return false;
         if (activeFilters.color && !(icon.colors || []).includes(activeFilters.color)) return false;
 
         if (search) {
@@ -958,10 +958,10 @@
             icon.file,
             icon.display_name || '',
             icon.collection || '',
-            icon.primary,
-            icon.vibe,
+            icon.category || icon.primary,
+            ...(icon.vibes || [icon.vibe]),
             icon.description || '',
-            ...(icon.secondary || []),
+            ...(icon.themes || icon.secondary || []),
             ...(icon.colors || []),
             ...(icon.path || [])
           ].join(' ').toLowerCase();
