@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Icon Archive</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <style>
     @font-face {
       font-family: 'ChicagoFLF';
@@ -467,6 +468,120 @@
       font-size: 10px;
       display: flex;
       justify-content: space-between;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .window {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: none;
+        box-shadow: none;
+      }
+
+      .toolbar {
+        padding: 6px;
+      }
+
+      .search-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        order: -1;
+      }
+
+      .sort-row {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .sort-buttons {
+        flex-wrap: wrap;
+      }
+
+      .stats {
+        width: 100%;
+        text-align: right;
+        margin-left: 0;
+      }
+
+      .filters {
+        gap: 4px;
+        margin-bottom: 4px;
+      }
+
+      .filter-label {
+        width: 100%;
+        margin-bottom: 2px;
+      }
+
+      .tag {
+        font-size: 9px;
+        padding: 2px 4px;
+      }
+
+      .color-swatch-btn {
+        width: 16px;
+        height: 16px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 2px;
+      }
+
+      .icon {
+        padding: 4px 2px;
+      }
+
+      .icon .name {
+        font-size: 8px;
+      }
+
+      #detail {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+
+      .title-bar h1 {
+        font-size: 11px;
+      }
+
+      .control-box {
+        width: 11px;
+        height: 11px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sort-btn {
+        font-size: 9px;
+        padding: 2px 4px;
+      }
+
+      .clear-btn {
+        font-size: 9px;
+        padding: 2px 6px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      }
+
+      .icon img {
+        width: 28px;
+        height: 28px;
+      }
     }
   </style>
 </head>
