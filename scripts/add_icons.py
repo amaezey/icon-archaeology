@@ -143,16 +143,13 @@ def tag_icon(client, filepath):
         return None
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python add_icons.py /path/to/new/icons/")
-        print("\nThis script will:")
-        print("1. Check new icons for duplicates")
-        print("2. Tag non-duplicates using Claude vision API")
-        print("3. Copy them to the icons folder")
-        print("4. Add them to tags.json")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Add new icons to the archive")
+    parser.add_argument("icons_dir", help="Path to folder of new icon PNGs")
+    parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
+    args = parser.parse_args()
 
-    new_icons_dir = Path(sys.argv[1])
+    new_icons_dir = Path(args.icons_dir)
     if not new_icons_dir.exists():
         print(f"Error: {new_icons_dir} does not exist")
         sys.exit(1)
@@ -209,10 +206,11 @@ def main():
         sys.exit(0)
 
     # Confirm
-    response = input("\nProceed with tagging and adding? (y/n): ")
-    if response.lower() != 'y':
-        print("Aborted.")
-        sys.exit(0)
+    if not args.yes:
+        response = input("\nProceed with tagging and adding? (y/n): ")
+        if response.lower() != 'y':
+            print("Aborted.")
+            sys.exit(0)
 
     # Initialize Claude client
     client = anthropic.Anthropic()

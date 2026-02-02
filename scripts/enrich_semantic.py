@@ -111,6 +111,11 @@ Be conservative - only add tags you're confident about based on the metadata."""
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--new-only", action="store_true", help="Only enrich icons not in existing output file")
+    args = parser.parse_args()
+
     print("Loading tags.json...")
     with open(INPUT_FILE) as f:
         data = json.load(f)
@@ -118,21 +123,36 @@ def main():
     icons = data['icons']
     print(f"Loaded {len(icons)} icons")
 
+    # If --new-only, find icons not in existing output
+    if args.new_only and OUTPUT_FILE.exists():
+        print("Loading existing enriched file to find new icons...")
+        with open(OUTPUT_FILE) as f:
+            existing = json.load(f)
+        existing_files = {icon['file'] for icon in existing['icons']}
+        new_indices = [i for i, icon in enumerate(icons) if icon['file'] not in existing_files]
+        print(f"Found {len(new_indices)} new icons to enrich")
+        if not new_indices:
+            print("No new icons to enrich!")
+            return
+    else:
+        new_indices = list(range(len(icons)))
+
     # Process in batches
     BATCH_SIZE = 30
     total_enriched = 0
 
-    for batch_start in range(0, len(icons), BATCH_SIZE):
-        batch_end = min(batch_start + BATCH_SIZE, len(icons))
-        batch = icons[batch_start:batch_end]
+    for batch_start in range(0, len(new_indices), BATCH_SIZE):
+        batch_end = min(batch_start + BATCH_SIZE, len(new_indices))
+        batch_indices = new_indices[batch_start:batch_end]
+        batch = [icons[i] for i in batch_indices]
 
-        print(f"\nProcessing {batch_start}-{batch_end}...")
+        print(f"\nProcessing batch {batch_start//BATCH_SIZE + 1} ({len(batch)} icons)...")
 
         try:
             results = analyze_batch(batch)
 
             for local_idx, new_tags in results.items():
-                global_idx = batch_start + local_idx
+                global_idx = batch_indices[local_idx]
                 current_themes = set(icons[global_idx].get('themes', []))
                 added = [t for t in new_tags if t not in current_themes]
                 if added:
