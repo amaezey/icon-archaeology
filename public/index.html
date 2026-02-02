@@ -67,14 +67,25 @@
     .title-bar {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 2px 4px;
-      background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          #fff 0px,
+          #fff 1px,
+          #bbb 1px,
+          #bbb 2px
+        );
       border-bottom: 1px solid #999;
+      height: 20px;
     }
 
     .title-bar .controls {
       display: flex;
       gap: 8px;
+      background: #ccc;
+      padding: 0 2px;
     }
 
     .control-box {
@@ -86,11 +97,14 @@
     }
 
     .title-bar h1 {
-      flex: 1;
-      text-align: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 12px;
       font-weight: normal;
       margin: 0;
+      background: #ccc;
+      padding: 0 8px;
     }
 
     .toolbar {
@@ -147,9 +161,8 @@
     .tag:hover { background: #eee; }
 
     .tag:active, .tag.active {
-      background: #000;
-      color: #fff;
-      box-shadow: inset 1px 1px 2px #000;
+      background: #bbb;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
     }
 
     .tag .count { opacity: 0.6; font-size: 9px; }
@@ -173,95 +186,162 @@
     }
 
     .color-swatch-btn:hover {
-      outline: 2px solid #000;
-      outline-offset: 1px;
+      outline: 1px solid #000;
     }
     .color-swatch-btn.active {
+      box-shadow: inset 2px 2px 3px rgba(0,0,0,0.5);
       outline: 2px solid #000;
-      outline-offset: 1px;
     }
 
     .clear-btn {
       font-family: inherit;
       font-size: 10px;
       padding: 2px 8px;
+      height: 22px;
       border: 1px solid #000;
       background: #ddd;
       box-shadow: var(--button-bezel);
       cursor: pointer;
     }
 
-    .sort-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+    .clear-btn:active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
     }
 
     .sort-label {
       font-size: 11px;
     }
 
-    .sort-buttons {
-      display: flex;
-      gap: 2px;
+    .custom-select {
+      position: relative;
+      font-family: inherit;
+      font-size: 11px;
+      min-width: 70px;
     }
 
-    .sort-btn {
-      font-family: inherit;
-      font-size: 10px;
-      padding: 2px 6px;
+    .select-selected {
+      padding: 2px 20px 2px 6px;
       border: 1px solid #000;
-      background: #ddd;
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M0 0h8L4 4z" fill="%23000"/></svg>') right 6px center no-repeat;
       box-shadow: var(--button-bezel);
+      cursor: pointer;
+      height: 20px;
+      line-height: 14px;
+    }
+
+    .select-selected:hover { background-color: #eee; }
+
+    .select-items {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      z-index: 100;
+      display: none;
+    }
+
+    .custom-select.open .select-items { display: block; }
+
+    .select-items div {
+      padding: 2px 6px;
       cursor: pointer;
     }
 
-    .sort-btn:hover { background: #eee; }
-    .sort-btn.active {
+    .select-items div:hover {
       background: #000;
       color: #fff;
-      box-shadow: inset 1px 1px 2px #000;
+    }
+
+    /* Category icon palette */
+    .category-palette {
+      display: flex;
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .category-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 8px 2px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 9px;
+    }
+
+    .category-btn img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      margin-bottom: 2px;
+    }
+
+    .category-btn .label { padding: 1px 3px; }
+
+    .category-btn.active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .category-btn.active .label {
+      background: #000;
+      color: #fff;
     }
 
     .pagination {
       display: flex;
       gap: 0;
       align-items: center;
-      justify-content: center;
-      padding: 4px 8px;
-      background: #ccc;
     }
 
-    .page-arrow {
-      font-family: inherit;
-      font-size: 10px;
-      width: 20px;
-      height: 18px;
-      border: 1px solid #000;
-      background: #ddd;
-      box-shadow: var(--button-bezel);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .page-arrow:hover { background: #eee; }
-    .page-arrow:disabled { opacity: 0.5; cursor: default; }
-    .page-arrow:active { box-shadow: inset 1px 1px 2px #000; }
-
-    .page-number {
+    .page-number-display {
       font-family: inherit;
       font-size: 11px;
-      min-width: 40px;
-      height: 18px;
+      min-width: 20px;
+      height: 15px;
       border-top: 1px solid #000;
       border-bottom: 1px solid #000;
       background: #fff;
       text-align: center;
-      line-height: 16px;
-      box-shadow: inset 1px 1px 0 #999;
+      line-height: 13px;
+      box-shadow: inset 1px 0 0 #888;
     }
+
+    .page-arrow {
+      width: 15px;
+      height: 15px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .page-arrow svg {
+      width: 6px;
+      height: 8px;
+    }
+
+    .page-arrow:hover { background: #eee; }
+    .page-arrow:disabled {
+      background: #ccc;
+      box-shadow: inset -1px -1px 0 #aaa, inset 1px 1px 0 #ddd;
+      cursor: default;
+    }
+    .page-arrow:disabled svg { opacity: 0.4; }
+    .page-arrow:active:not(:disabled) { box-shadow: inset 1px 1px 2px #000; }
 
     /* Mac OS 8 scrollbar */
     .content-area::-webkit-scrollbar {
@@ -468,6 +548,7 @@
       font-size: 10px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
 
     /* Mobile responsive */
@@ -495,19 +576,38 @@
         order: -1;
       }
 
-      .sort-row {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .sort-buttons {
-        flex-wrap: wrap;
-      }
-
       .stats {
-        width: 100%;
-        text-align: right;
-        margin-left: 0;
+        margin-left: auto;
+      }
+
+      .status-bar {
+        font-size: 9px;
+      }
+
+      .page-arrow {
+        width: 14px;
+        height: 14px;
+      }
+
+      .page-number-display {
+        min-width: 18px;
+        height: 14px;
+        font-size: 10px;
+        line-height: 12px;
+      }
+
+      .category-palette {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .category-btn {
+        padding: 3px 6px 2px;
+      }
+
+      .category-btn img {
+        width: 24px;
+        height: 24px;
       }
 
       .filters {
@@ -564,14 +664,30 @@
     }
 
     @media (max-width: 480px) {
-      .sort-btn {
-        font-size: 9px;
-        padding: 2px 4px;
+      .custom-select {
+        font-size: 10px;
+        min-width: 60px;
+      }
+
+      .select-selected {
+        padding: 2px 16px 2px 4px;
+        height: 18px;
+        line-height: 12px;
       }
 
       .clear-btn {
         font-size: 9px;
         padding: 2px 6px;
+        height: 20px;
+      }
+
+      .category-btn img {
+        width: 20px;
+        height: 20px;
+      }
+
+      .category-btn .label {
+        font-size: 8px;
       }
 
       .grid {
@@ -601,31 +717,28 @@
     <div class="toolbar">
       <div class="search-row">
         <input type="text" id="search" placeholder="Search...">
-        <button class="clear-btn" id="clear-filters">Clear</button>
-        <div class="sort-row">
-          <span class="sort-label">Sort:</span>
-          <div class="sort-buttons" id="sort-buttons">
-            <button class="sort-btn active" data-sort="name">Name</button>
-            <button class="sort-btn" data-sort="collection">Collection</button>
-            <button class="sort-btn" data-sort="category">Category</button>
-            <button class="sort-btn" data-sort="vibe">Vibe</button>
+        <span class="sort-label">Sort:</span>
+        <div class="custom-select" id="sort-select">
+          <div class="select-selected">A–Z</div>
+          <div class="select-items">
+            <div data-value="name-asc">A–Z</div>
+            <div data-value="name-desc">Z–A</div>
+            <div data-value="newest">Newest</div>
+            <div data-value="oldest">Oldest</div>
           </div>
         </div>
+        <button class="clear-btn" id="clear-filters">Reset Filters</button>
         <div class="stats">
           <span id="count">0</span> / <span id="total">0</span> icons
         </div>
       </div>
       <div class="filters">
         <span class="filter-label">Category:</span>
-        <div class="filter-group" id="category-filters"></div>
+        <div class="category-palette" id="category-filters"></div>
       </div>
       <div class="filters">
-        <span class="filter-label">Theme:</span>
-        <div class="filter-group" id="theme-filters"></div>
-      </div>
-      <div class="filters">
-        <span class="filter-label">Vibe:</span>
-        <div class="filter-group" id="vibe-filters"></div>
+        <span class="filter-label">Tags:</span>
+        <div class="filter-group" id="tag-filters"></div>
       </div>
       <div class="filters">
         <span class="filter-label">Color:</span>
@@ -639,11 +752,9 @@
       </div>
     </div>
 
-    <div class="pagination" id="pagination"></div>
-
     <div class="status-bar">
       <span id="status-text">Ready</span>
-      <span id="selected-name"></span>
+      <div class="pagination" id="pagination"></div>
     </div>
   </div>
 
@@ -657,8 +768,7 @@
       <div class="description"></div>
       <div class="breadcrumb"></div>
       <div class="detail-row"><span>Category: </span><span class="primary-val"></span></div>
-      <div class="detail-row"><span>Theme: </span><span class="secondary-val"></span></div>
-      <div class="detail-row"><span>Vibe: </span><span class="vibe-val"></span></div>
+      <div class="detail-row"><span>Tags: </span><span class="tags-val"></span></div>
       <div class="colors"></div>
       <a class="download-link" href="" download>Download</a>
     </div>
@@ -669,10 +779,24 @@
     const TAGS_FILE = 'tags.json';
 
     let tagsData = null;
-    let activeFilters = { category: null, vibe: null, theme: null, color: null };
-    const expandedGroups = { category: false, vibe: false, theme: false };
+    // Multi-select: Sets for categories, tags, colors
+    let activeFilters = {
+      categories: new Set(),
+      tags: new Set(),
+      colors: new Set()
+    };
+    const expandedGroups = { tags: false };
     let currentPage = 1;
     const PAGE_SIZE = 500;
+
+    // Category icons mapping
+    const CATEGORY_ICONS = {
+      'object': 'icons/afternoon-tea---sweets--short-cake-1.png',
+      'character': 'icons/alive--bunny.png',
+      'symbol': 'icons/heart---16455.png',
+      'ui': 'icons/-regis-millenium--finder.png',
+      'text': 'icons/classic-x--text.png'
+    };
 
     function countValues(field, isArray = false, minCount = 1) {
       const counts = {};
@@ -705,10 +829,119 @@
     }
 
     function buildFilters() {
-      buildFilterGroup('category', 'category-filters', 'category', false, 15);
-      buildFilterGroup('vibes', 'vibe-filters', 'vibe', true, 10);
-      buildFilterGroup('themes', 'theme-filters', 'theme', true, 15);
+      buildCategoryPalette();
+      buildTagFilters();
       buildColorFilters();
+    }
+
+    function buildCategoryPalette() {
+      const container = document.getElementById('category-filters');
+      container.replaceChildren();
+
+      const categories = ['object', 'character', 'symbol', 'ui', 'text'];
+
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn';
+        if (activeFilters.categories.has(cat)) btn.classList.add('active');
+
+        const img = document.createElement('img');
+        img.src = CATEGORY_ICONS[cat];
+        img.alt = cat;
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = cat;
+
+        btn.appendChild(img);
+        btn.appendChild(label);
+
+        btn.onclick = () => {
+          if (activeFilters.categories.has(cat)) {
+            activeFilters.categories.delete(cat);
+            btn.classList.remove('active');
+          } else {
+            activeFilters.categories.add(cat);
+            btn.classList.add('active');
+          }
+          currentPage = 1;
+          render();
+        };
+
+        container.appendChild(btn);
+      });
+    }
+
+    function buildTagFilters() {
+      const container = document.getElementById('tag-filters');
+      container.replaceChildren();
+
+      // Merge themes and vibes, dedupe by name
+      const themeCounts = {};
+      const vibeCounts = {};
+
+      tagsData.icons.forEach(icon => {
+        (icon.themes || icon.secondary || []).forEach(t => {
+          if (t) themeCounts[t] = (themeCounts[t] || 0) + 1;
+        });
+        (icon.vibes || [icon.vibe]).filter(Boolean).forEach(v => {
+          if (v) vibeCounts[v] = (vibeCounts[v] || 0) + 1;
+        });
+      });
+
+      // Combine into single map, taking max count if both exist
+      const allTags = {};
+      Object.entries(themeCounts).forEach(([k, v]) => {
+        allTags[k] = Math.max(allTags[k] || 0, v);
+      });
+      Object.entries(vibeCounts).forEach(([k, v]) => {
+        allTags[k] = Math.max(allTags[k] || 0, v);
+      });
+
+      const sortedTags = Object.entries(allTags)
+        .sort((a, b) => b[1] - a[1])
+        .filter(([_, count]) => count >= 10);
+
+      const expanded = expandedGroups.tags;
+      const initialCount = 20;
+      const visibleTags = expanded ? sortedTags : sortedTags.slice(0, initialCount);
+
+      visibleTags.forEach(([tag, count]) => {
+        const btn = document.createElement('button');
+        btn.className = 'tag';
+        if (activeFilters.tags.has(tag)) btn.classList.add('active');
+        btn.textContent = tag;
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'count';
+        countSpan.textContent = ' (' + count + ')';
+        btn.appendChild(countSpan);
+
+        btn.onclick = () => {
+          if (activeFilters.tags.has(tag)) {
+            activeFilters.tags.delete(tag);
+            btn.classList.remove('active');
+          } else {
+            activeFilters.tags.add(tag);
+            btn.classList.add('active');
+          }
+          currentPage = 1;
+          render();
+        };
+
+        container.appendChild(btn);
+      });
+
+      if (sortedTags.length > initialCount) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'toggle-btn';
+        toggleBtn.textContent = expanded ? 'less' : '+' + (sortedTags.length - initialCount);
+        toggleBtn.onclick = () => {
+          expandedGroups.tags = !expandedGroups.tags;
+          buildTagFilters();
+        };
+        container.appendChild(toggleBtn);
+      }
     }
 
     function buildColorFilters() {
@@ -731,16 +964,15 @@
       topColors.forEach(([color, count]) => {
         const btn = document.createElement('button');
         btn.className = 'color-swatch-btn';
-        if (activeFilters.color === color) btn.classList.add('active');
+        if (activeFilters.colors.has(color)) btn.classList.add('active');
         btn.style.background = color;
         btn.title = color + ' (' + count + ')';
         btn.onclick = () => {
-          if (activeFilters.color === color) {
-            activeFilters.color = null;
+          if (activeFilters.colors.has(color)) {
+            activeFilters.colors.delete(color);
             btn.classList.remove('active');
           } else {
-            document.querySelectorAll('#color-filters .color-swatch-btn').forEach(b => b.classList.remove('active'));
-            activeFilters.color = color;
+            activeFilters.colors.add(color);
             btn.classList.add('active');
           }
           currentPage = 1;
@@ -750,55 +982,13 @@
       });
     }
 
-    function buildFilterGroup(field, containerId, filterKey, isArray, initialCount) {
-      const container = document.getElementById(containerId);
-      container.replaceChildren();
-
-      const allValues = countValues(field, isArray, 1);
-      const expanded = expandedGroups[filterKey];
-      const visibleValues = expanded ? allValues : allValues.slice(0, initialCount);
-
-      visibleValues.forEach(([val, count]) => {
-        const btn = document.createElement('button');
-        btn.className = 'tag';
-        if (activeFilters[filterKey] === val) btn.classList.add('active');
-        btn.textContent = val;
-        const countSpan = document.createElement('span');
-        countSpan.className = 'count';
-        countSpan.textContent = ' (' + count + ')';
-        btn.appendChild(countSpan);
-        btn.onclick = () => toggleFilter(filterKey, val, btn, containerId);
-        container.appendChild(btn);
-      });
-
-      if (allValues.length > initialCount) {
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'toggle-btn';
-        toggleBtn.textContent = expanded ? 'less' : '+' + (allValues.length - initialCount);
-        toggleBtn.onclick = () => {
-          expandedGroups[filterKey] = !expandedGroups[filterKey];
-          buildFilterGroup(field, containerId, filterKey, isArray, initialCount);
-        };
-        container.appendChild(toggleBtn);
-      }
-    }
-
-    function toggleFilter(type, value, btn, containerId) {
-      if (activeFilters[type] === value) {
-        activeFilters[type] = null;
-        btn.classList.remove('active');
-      } else {
-        document.querySelectorAll('#' + containerId + ' .tag').forEach(t => t.classList.remove('active'));
-        activeFilters[type] = value;
-        btn.classList.add('active');
-      }
-      currentPage = 1;
-      render();
-    }
-
     function clearFilters() {
-      activeFilters = { category: null, vibe: null, theme: null, color: null };
-      document.querySelectorAll('.tag.active, .color-swatch-btn.active').forEach(t => t.classList.remove('active'));
+      activeFilters = {
+        categories: new Set(),
+        tags: new Set(),
+        colors: new Set()
+      };
+      document.querySelectorAll('.tag.active, .color-swatch-btn.active, .category-btn.active').forEach(t => t.classList.remove('active'));
       document.getElementById('search').value = '';
       currentPage = 1;
       render();
@@ -861,8 +1051,12 @@
       detail.querySelector('.description').textContent = icon.description || '';
       detail.querySelector('.breadcrumb').textContent = icon.path ? icon.path.join(' > ') : (icon.collection || '');
       detail.querySelector('.primary-val').textContent = icon.category || icon.primary;
-      detail.querySelector('.secondary-val').textContent = (icon.themes || icon.secondary || []).join(', ') || 'none';
-      detail.querySelector('.vibe-val').textContent = (icon.vibes || [icon.vibe]).join(', ') || 'none';
+      const allTags = [
+        ...(icon.themes || icon.secondary || []),
+        ...(icon.vibes || [icon.vibe]).filter(Boolean)
+      ];
+      const uniqueTags = [...new Set(allTags)];
+      detail.querySelector('.tags-val').textContent = uniqueTags.join(', ') || 'none';
 
       const colorsDiv = detail.querySelector('.colors');
       colorsDiv.replaceChildren();
@@ -882,34 +1076,36 @@
       document.getElementById('selected-name').textContent = getDisplayName(icon);
     }
 
-    let currentSort = 'name';
+    let currentSort = 'name-asc';
 
     function sortIcons(icons) {
       const sortBy = currentSort;
+
+      if (sortBy === 'newest') {
+        return [...icons].reverse();
+      }
+      if (sortBy === 'oldest') {
+        return [...icons];
+      }
+
       return [...icons].sort((a, b) => {
-        let aVal, bVal;
+        let aVal, bVal, direction = 1;
+
         switch (sortBy) {
-          case 'name':
+          case 'name-asc':
             aVal = (a.display_name || a.description || a.file).toLowerCase();
             bVal = (b.display_name || b.description || b.file).toLowerCase();
             break;
-          case 'collection':
-            aVal = (a.collection || '').toLowerCase();
-            bVal = (b.collection || '').toLowerCase();
-            break;
-          case 'category':
-            aVal = (a.category || a.primary || '').toLowerCase();
-            bVal = (b.category || b.primary || '').toLowerCase();
-            break;
-          case 'vibe':
-            aVal = ((a.vibes || [a.vibe])[0] || '').toLowerCase();
-            bVal = ((b.vibes || [b.vibe])[0] || '').toLowerCase();
+          case 'name-desc':
+            aVal = (a.display_name || a.description || a.file).toLowerCase();
+            bVal = (b.display_name || b.description || b.file).toLowerCase();
+            direction = -1;
             break;
           default:
             aVal = a.file;
             bVal = b.file;
         }
-        return aVal.localeCompare(bVal);
+        return direction * aVal.localeCompare(bVal);
       });
     }
 
@@ -917,25 +1113,36 @@
       const container = document.getElementById('pagination');
       container.replaceChildren();
 
-      const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-      if (totalPages <= 1) return;
+      const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
-      // Mac OS 8 style: ◁ | page | ▷
+      // Mac OS 8 style pagination - always show
       const prevBtn = document.createElement('button');
       prevBtn.className = 'page-arrow';
-      prevBtn.textContent = '◁';
+      const prevSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      prevSvg.setAttribute('viewBox', '0 0 6 8');
+      const prevPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      prevPath.setAttribute('d', 'M6 0L0 4L6 8z');
+      prevPath.setAttribute('fill', '#000');
+      prevSvg.appendChild(prevPath);
+      prevBtn.appendChild(prevSvg);
       prevBtn.disabled = currentPage === 1;
       prevBtn.onclick = () => { currentPage--; render(); };
       container.appendChild(prevBtn);
 
       const pageNum = document.createElement('div');
-      pageNum.className = 'page-number';
+      pageNum.className = 'page-number-display';
       pageNum.textContent = currentPage;
       container.appendChild(pageNum);
 
       const nextBtn = document.createElement('button');
       nextBtn.className = 'page-arrow';
-      nextBtn.textContent = '▷';
+      const nextSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      nextSvg.setAttribute('viewBox', '0 0 6 8');
+      const nextPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      nextPath.setAttribute('d', 'M0 0L6 4L0 8z');
+      nextPath.setAttribute('fill', '#000');
+      nextSvg.appendChild(nextPath);
+      nextBtn.appendChild(nextSvg);
       nextBtn.disabled = currentPage === totalPages;
       nextBtn.onclick = () => { currentPage++; render(); };
       container.appendChild(nextBtn);
@@ -948,10 +1155,28 @@
       const grid = document.getElementById('grid');
 
       let filtered = tagsData.icons.filter(icon => {
-        if (activeFilters.category && (icon.category || icon.primary) !== activeFilters.category) return false;
-        if (activeFilters.vibe && !(icon.vibes || [icon.vibe]).includes(activeFilters.vibe)) return false;
-        if (activeFilters.theme && !(icon.themes || icon.secondary || []).includes(activeFilters.theme)) return false;
-        if (activeFilters.color && !(icon.colors || []).includes(activeFilters.color)) return false;
+        // Category filter (OR logic): icon must match at least one selected category
+        if (activeFilters.categories.size > 0) {
+          const iconCat = icon.category || icon.primary;
+          if (!activeFilters.categories.has(iconCat)) return false;
+        }
+
+        // Tags filter (OR logic): icon must have at least one selected tag (from themes or vibes)
+        if (activeFilters.tags.size > 0) {
+          const iconTags = [
+            ...(icon.themes || icon.secondary || []),
+            ...(icon.vibes || [icon.vibe]).filter(Boolean)
+          ];
+          const hasMatch = iconTags.some(t => activeFilters.tags.has(t));
+          if (!hasMatch) return false;
+        }
+
+        // Color filter (OR logic): icon must have at least one selected color
+        if (activeFilters.colors.size > 0) {
+          const iconColors = icon.colors || [];
+          const hasMatch = iconColors.some(c => activeFilters.colors.has(c));
+          if (!hasMatch) return false;
+        }
 
         if (search) {
           const haystack = [
@@ -999,15 +1224,28 @@
     document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
     document.getElementById('clear-filters').addEventListener('click', clearFilters);
 
-    // Sort buttons
-    document.getElementById('sort-buttons').addEventListener('click', (e) => {
-      if (e.target.classList.contains('sort-btn')) {
-        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        currentSort = e.target.dataset.sort;
+    // Custom sort dropdown
+    const sortSelect = document.getElementById('sort-select');
+    const sortSelected = sortSelect.querySelector('.select-selected');
+    const sortItems = sortSelect.querySelector('.select-items');
+
+    sortSelected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sortSelect.classList.toggle('open');
+    });
+
+    sortItems.addEventListener('click', (e) => {
+      if (e.target.dataset.value) {
+        currentSort = e.target.dataset.value;
+        sortSelected.textContent = e.target.textContent;
+        sortSelect.classList.remove('open');
         currentPage = 1;
         render();
       }
+    });
+
+    document.addEventListener('click', () => {
+      sortSelect.classList.remove('open');
     });
 
     loadTags();
