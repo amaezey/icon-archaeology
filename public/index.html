@@ -165,6 +165,10 @@
       box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
     }
 
+    .tag.unavailable {
+      opacity: 0.4;
+    }
+
     .tag .count { opacity: 0.6; font-size: 9px; }
 
     .toggle-btn {
@@ -193,11 +197,15 @@
       outline: 2px solid #000;
     }
 
+    .color-swatch-btn.unavailable {
+      opacity: 0.4;
+    }
+
     .clear-btn {
       font-family: inherit;
-      font-size: 10px;
-      padding: 2px 8px;
-      height: 22px;
+      font-size: 11px;
+      padding: 8px 12px;
+      align-self: stretch;
       border: 1px solid #000;
       background: #ddd;
       box-shadow: var(--button-bezel);
@@ -677,8 +685,7 @@
 
       .clear-btn {
         font-size: 9px;
-        padding: 2px 6px;
-        height: 20px;
+        padding: 6px 8px;
       }
 
       .category-btn img {
@@ -727,7 +734,6 @@
             <div data-value="oldest">Oldest</div>
           </div>
         </div>
-        <button class="clear-btn" id="clear-filters">Reset Filters</button>
         <div class="stats">
           <span id="count">0</span> / <span id="total">0</span> icons
         </div>
@@ -735,6 +741,7 @@
       <div class="filters">
         <span class="filter-label">Category:</span>
         <div class="category-palette" id="category-filters"></div>
+        <button class="clear-btn" id="clear-filters">Reset Filters</button>
       </div>
       <div class="filters">
         <span class="filter-label">Tags:</span>
@@ -909,6 +916,7 @@
       visibleTags.forEach(([tag, count]) => {
         const btn = document.createElement('button');
         btn.className = 'tag';
+        btn.dataset.tag = tag;
         if (activeFilters.tags.has(tag)) btn.classList.add('active');
         btn.textContent = tag;
 
@@ -964,6 +972,7 @@
       topColors.forEach(([color, count]) => {
         const btn = document.createElement('button');
         btn.className = 'color-swatch-btn';
+        btn.dataset.color = color;
         if (activeFilters.colors.has(color)) btn.classList.add('active');
         btn.style.background = color;
         btn.title = color + ' (' + count + ')';
@@ -992,6 +1001,45 @@
       document.getElementById('search').value = '';
       currentPage = 1;
       render();
+    }
+
+    function updateFilterCounts(filteredIcons) {
+      // Count tags among filtered icons
+      const tagCounts = {};
+      const colorCounts = {};
+
+      filteredIcons.forEach(icon => {
+        const iconTags = [
+          ...(icon.themes || icon.secondary || []),
+          ...(icon.vibes || [icon.vibe]).filter(Boolean)
+        ];
+        iconTags.forEach(t => {
+          if (t) tagCounts[t] = (tagCounts[t] || 0) + 1;
+        });
+
+        (icon.colors || []).forEach(c => {
+          if (c) colorCounts[c] = (colorCounts[c] || 0) + 1;
+        });
+      });
+
+      // Update tag buttons
+      document.querySelectorAll('.tag[data-tag]').forEach(btn => {
+        const tag = btn.dataset.tag;
+        const count = tagCounts[tag] || 0;
+        const countSpan = btn.querySelector('.count');
+        if (countSpan) {
+          countSpan.textContent = ' (' + count + ')';
+        }
+        btn.classList.toggle('unavailable', count === 0 && !activeFilters.tags.has(tag));
+      });
+
+      // Update color buttons
+      document.querySelectorAll('.color-swatch-btn[data-color]').forEach(btn => {
+        const color = btn.dataset.color;
+        const count = colorCounts[color] || 0;
+        btn.title = color + ' (' + count + ')';
+        btn.classList.toggle('unavailable', count === 0 && !activeFilters.colors.has(color));
+      });
     }
 
     function getDisplayName(icon) {
@@ -1161,21 +1209,21 @@
           if (!activeFilters.categories.has(iconCat)) return false;
         }
 
-        // Tags filter (OR logic): icon must have at least one selected tag (from themes or vibes)
+        // Tags filter (AND logic): icon must have ALL selected tags (from themes or vibes)
         if (activeFilters.tags.size > 0) {
           const iconTags = [
             ...(icon.themes || icon.secondary || []),
             ...(icon.vibes || [icon.vibe]).filter(Boolean)
           ];
-          const hasMatch = iconTags.some(t => activeFilters.tags.has(t));
-          if (!hasMatch) return false;
+          const hasAllTags = [...activeFilters.tags].every(t => iconTags.includes(t));
+          if (!hasAllTags) return false;
         }
 
-        // Color filter (OR logic): icon must have at least one selected color
+        // Color filter (AND logic): icon must have ALL selected colors
         if (activeFilters.colors.size > 0) {
           const iconColors = icon.colors || [];
-          const hasMatch = iconColors.some(c => activeFilters.colors.has(c));
-          if (!hasMatch) return false;
+          const hasAllColors = [...activeFilters.colors].every(c => iconColors.includes(c));
+          if (!hasAllColors) return false;
         }
 
         if (search) {
@@ -1219,6 +1267,8 @@
       renderPagination(filtered.length);
       document.getElementById('count').textContent = filtered.length.toLocaleString();
       document.getElementById('status-text').textContent = filtered.length + ' items';
+
+      updateFilterCounts(filtered);
     }
 
     document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
