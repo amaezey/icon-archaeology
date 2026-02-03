@@ -883,26 +883,17 @@
       const container = document.getElementById('tag-filters');
       container.replaceChildren();
 
-      // Merge themes and vibes, dedupe by name
-      const themeCounts = {};
-      const vibeCounts = {};
-
-      tagsData.icons.forEach(icon => {
-        (icon.themes || icon.secondary || []).forEach(t => {
-          if (t) themeCounts[t] = (themeCounts[t] || 0) + 1;
-        });
-        (icon.vibes || [icon.vibe]).filter(Boolean).forEach(v => {
-          if (v) vibeCounts[v] = (vibeCounts[v] || 0) + 1;
-        });
-      });
-
-      // Combine into single map, taking max count if both exist
+      // Count unique icons per tag (deduped across themes and vibes)
       const allTags = {};
-      Object.entries(themeCounts).forEach(([k, v]) => {
-        allTags[k] = Math.max(allTags[k] || 0, v);
-      });
-      Object.entries(vibeCounts).forEach(([k, v]) => {
-        allTags[k] = Math.max(allTags[k] || 0, v);
+      tagsData.icons.forEach(icon => {
+        // Dedupe tags for this icon - may appear in both themes and vibes
+        const iconTags = new Set([
+          ...(icon.themes || icon.secondary || []),
+          ...(icon.vibes || [icon.vibe]).filter(Boolean)
+        ]);
+        iconTags.forEach(t => {
+          if (t) allTags[t] = (allTags[t] || 0) + 1;
+        });
       });
 
       const sortedTags = Object.entries(allTags)
@@ -1009,10 +1000,11 @@
       const colorCounts = {};
 
       filteredIcons.forEach(icon => {
-        const iconTags = [
+        // Dedupe tags - an icon may have same tag in both themes and vibes
+        const iconTags = new Set([
           ...(icon.themes || icon.secondary || []),
           ...(icon.vibes || [icon.vibe]).filter(Boolean)
-        ];
+        ]);
         iconTags.forEach(t => {
           if (t) tagCounts[t] = (tagCounts[t] || 0) + 1;
         });
@@ -1121,7 +1113,6 @@
       detail.querySelector('.download-link').download = (icon.display_name || getDisplayName(icon)) + '.png';
 
       detail.classList.add('visible');
-      document.getElementById('selected-name').textContent = getDisplayName(icon);
     }
 
     let currentSort = 'name-asc';
