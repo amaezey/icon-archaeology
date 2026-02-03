@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter V2: Dropdown Panels</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; }
+    ::selection { background: #000; color: #fff; }
+
+    :root {
+      --button-bezel: inset -1px -1px 0px 0px #777, inset -2px -2px 0px 0px #aaa, inset 1px 1px 0px 0px #ddd, inset 2px 2px 0px 0px #fff;
+      --pressed-bezel: inset 1px 1px 2px #000;
+      --field-bezel: inset 1px 1px 0 #999;
+      --popup-arrow: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="5"><path d="M0 0h9L4.5 5z" fill="%23000"/></svg>');
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #ccc;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+    }
+
+    .toolbar {
+      padding: 8px;
+      background: #ccc;
+      border-bottom: 1px solid #999;
+    }
+
+    /* FILTER BUTTON ROW */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .filter-dropdown {
+      position: relative;
+    }
+
+    .filter-btn {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 3px 20px 3px 8px;
+      border: 1px solid #000;
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="5"><path d="M0 0h9L4.5 5z" fill="%23000"/></svg>') right 6px center no-repeat;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      text-align: left;
+      min-width: 100px;
+    }
+
+    .filter-btn:hover { background-color: #eee; }
+
+    .filter-btn.has-selection {
+      background-color: #000;
+      color: #fff;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="5"><path d="M0 0h9L4.5 5z" fill="%23fff"/></svg>');
+    }
+
+    .filter-btn .btn-count {
+      font-size: 9px;
+      opacity: 0.7;
+    }
+
+    .filter-btn.open {
+      box-shadow: var(--pressed-bezel);
+    }
+
+    /* DROPDOWN PANEL */
+    .filter-panel {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 280px;
+      max-width: 400px;
+      max-height: 300px;
+      margin-top: 2px;
+      background: #ccc;
+      border: 1px solid #000;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      z-index: 100;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+    }
+
+    .filter-panel.open {
+      display: flex;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+      background: linear-gradient(to bottom, #ddd 0%, #bbb 100%);
+      border-bottom: 1px solid #999;
+    }
+
+    .panel-title {
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .panel-clear {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid #666;
+      background: #ccc;
+      cursor: pointer;
+    }
+
+    .panel-clear:hover { background: #ddd; }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px;
+      background: #ddd;
+    }
+
+    /* Scrollbar for panel */
+    .panel-body::-webkit-scrollbar { width: 14px; }
+    .panel-body::-webkit-scrollbar-track { background: #ccc; border-left: 1px solid #999; }
+    .panel-body::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+    }
+
+    /* CHECKBOX LIST */
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .checkbox-item:hover {
+      background: #ccc;
+      border: 1px dotted #666;
+    }
+
+    .checkbox-item.checked {
+      background: #000;
+      color: #fff;
+    }
+
+    .checkbox-box {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .checkbox-item.checked .checkbox-box {
+      background: #fff;
+    }
+
+    .checkbox-item.checked .checkbox-box::after {
+      content: "✓";
+      color: #000;
+    }
+
+    .checkbox-label {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .checkbox-count {
+      font-size: 9px;
+      opacity: 0.6;
+    }
+
+    /* COLOR GRID in panel */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+      gap: 4px;
+    }
+
+    .color-item {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #000;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .color-item:hover {
+      outline: 2px solid #666;
+      outline-offset: 1px;
+    }
+
+    .color-item.checked {
+      outline: 2px solid #000;
+      outline-offset: 1px;
+    }
+
+    .color-item.checked::after {
+      content: "✓";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      text-shadow: 0 0 2px #000, 0 0 2px #000;
+    }
+
+    /* CLEAR ALL */
+    .clear-all-btn {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 3px 10px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .clear-all-btn:hover { background: #eee; }
+    .clear-all-btn:active { box-shadow: var(--pressed-bezel); }
+
+    /* SELECTION SUMMARY */
+    .selection-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 6px 8px;
+      min-height: 24px;
+      background: #bbb;
+      border-top: 1px solid #999;
+    }
+
+    .summary-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 9px;
+      padding: 1px 4px;
+      background: #000;
+      color: #fff;
+      border: 1px solid #000;
+    }
+
+    .summary-chip .remove {
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    .summary-chip .remove:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .no-selection {
+      font-size: 10px;
+      color: #666;
+    }
+
+    /* STATS */
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: #aaa;
+      font-size: 10px;
+    }
+
+    /* CONTENT */
+    .content-area {
+      margin: 8px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: var(--field-bezel);
+      min-height: 300px;
+      text-align: center;
+      color: #666;
+    }
+
+    /* Mobile: panels go full width */
+    @media (max-width: 600px) {
+      .filter-panel {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        min-width: 100%;
+        max-width: 100%;
+        max-height: 60vh;
+        margin: 0;
+        border-radius: 8px 8px 0 0;
+      }
+
+      .filter-row {
+        gap: 4px;
+      }
+
+      .filter-btn {
+        font-size: 10px;
+        padding: 4px 16px 4px 6px;
+        min-width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="filter-row">
+      <div class="filter-dropdown" data-filter="category">
+        <button class="filter-btn" id="category-btn">Category</button>
+        <div class="filter-panel" id="category-panel">
+          <div class="panel-header">
+            <span class="panel-title">Category</span>
+            <button class="panel-clear" data-clear="category">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="checkbox-list" id="category-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-dropdown" data-filter="theme">
+        <button class="filter-btn" id="theme-btn">Theme</button>
+        <div class="filter-panel" id="theme-panel">
+          <div class="panel-header">
+            <span class="panel-title">Theme</span>
+            <button class="panel-clear" data-clear="theme">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="checkbox-list" id="theme-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-dropdown" data-filter="vibe">
+        <button class="filter-btn" id="vibe-btn">Vibe</button>
+        <div class="filter-panel" id="vibe-panel">
+          <div class="panel-header">
+            <span class="panel-title">Vibe</span>
+            <button class="panel-clear" data-clear="vibe">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="checkbox-list" id="vibe-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-dropdown" data-filter="color">
+        <button class="filter-btn" id="color-btn">Color</button>
+        <div class="filter-panel" id="color-panel">
+          <div class="panel-header">
+            <span class="panel-title">Color</span>
+            <button class="panel-clear" data-clear="color">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="color-grid" id="color-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="clear-all-btn" id="clear-all">Clear All</button>
+    </div>
+  </div>
+
+  <div class="selection-summary" id="selection-summary">
+    <span class="no-selection">No filters selected</span>
+  </div>
+
+  <div class="stats-bar">
+    <span id="result-count">0 icons</span>
+    <span id="filter-desc">No filters</span>
+  </div>
+
+  <div class="content-area">
+    <p>[ Icon grid would appear here ]</p>
+  </div>
+
+  <script>
+    let tagsData = null;
+    let activeFilters = { category: new Set(), theme: new Set(), vibe: new Set(), color: new Set() };
+    let openPanel = null;
+
+    async function loadData() {
+      const res = await fetch('../public/tags.json');
+      tagsData = await res.json();
+      buildFilters();
+      updateUI();
+    }
+
+    function countValues(field, isArray = false) {
+      const counts = {};
+      tagsData.icons.forEach(icon => {
+        if (isArray) {
+          (icon[field] || []).forEach(val => {
+            if (val) counts[val] = (counts[val] || 0) + 1;
+          });
+        } else {
+          const val = icon[field];
+          if (val) counts[val] = (counts[val] || 0) + 1;
+        }
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function buildFilters() {
+      buildCheckboxList('category', 'category-list', false);
+      buildCheckboxList('themes', 'theme-list', true);
+      buildCheckboxList('vibes', 'vibe-list', true);
+      buildColorGrid();
+    }
+
+    function buildCheckboxList(field, containerId, isArray) {
+      const values = countValues(field, isArray);
+      const container = document.getElementById(containerId);
+      container.replaceChildren();
+
+      const filterType = containerId.replace('-list', '');
+
+      values.forEach(([val, count]) => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.dataset.value = val;
+        item.dataset.filter = filterType;
+
+        const box = document.createElement('span');
+        box.className = 'checkbox-box';
+
+        const label = document.createElement('span');
+        label.className = 'checkbox-label';
+        label.textContent = val;
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'checkbox-count';
+        countSpan.textContent = count;
+
+        item.appendChild(box);
+        item.appendChild(label);
+        item.appendChild(countSpan);
+        item.onclick = () => toggleFilter(filterType, val);
+        container.appendChild(item);
+      });
+    }
+
+    function buildColorGrid() {
+      const colors = countValues('colors', true);
+      const container = document.getElementById('color-grid');
+      container.replaceChildren();
+
+      colors.forEach(([val, count]) => {
+        const item = document.createElement('div');
+        item.className = 'color-item';
+        item.style.background = val;
+        item.title = val + ' (' + count + ')';
+        item.dataset.value = val;
+        item.onclick = () => toggleFilter('color', val);
+        container.appendChild(item);
+      });
+    }
+
+    function toggleFilter(type, value) {
+      if (activeFilters[type].has(value)) {
+        activeFilters[type].delete(value);
+      } else {
+        activeFilters[type].add(value);
+      }
+      updateUI();
+    }
+
+    function clearFilter(type) {
+      activeFilters[type].clear();
+      updateUI();
+    }
+
+    function clearAll() {
+      Object.keys(activeFilters).forEach(k => activeFilters[k].clear());
+      updateUI();
+    }
+
+    function togglePanel(filterType) {
+      const panel = document.getElementById(filterType + '-panel');
+      const btn = document.getElementById(filterType + '-btn');
+
+      if (openPanel && openPanel !== filterType) {
+        document.getElementById(openPanel + '-panel').classList.remove('open');
+        document.getElementById(openPanel + '-btn').classList.remove('open');
+      }
+
+      const isOpen = panel.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      openPanel = isOpen ? filterType : null;
+    }
+
+    function updateUI() {
+      // Update checkbox states
+      document.querySelectorAll('.checkbox-item').forEach(item => {
+        const type = item.dataset.filter;
+        const val = item.dataset.value;
+        item.classList.toggle('checked', activeFilters[type].has(val));
+      });
+
+      // Update color states
+      document.querySelectorAll('.color-item').forEach(item => {
+        item.classList.toggle('checked', activeFilters.color.has(item.dataset.value));
+      });
+
+      // Update button labels
+      ['category', 'theme', 'vibe', 'color'].forEach(type => {
+        const btn = document.getElementById(type + '-btn');
+        const count = activeFilters[type].size;
+        const label = type.charAt(0).toUpperCase() + type.slice(1);
+
+        if (count > 0) {
+          btn.classList.add('has-selection');
+          const countSpan = document.createElement('span');
+          countSpan.className = 'btn-count';
+          countSpan.textContent = ' (' + count + ')';
+          btn.textContent = label;
+          btn.appendChild(countSpan);
+        } else {
+          btn.classList.remove('has-selection');
+          btn.textContent = label;
+        }
+      });
+
+      // Update selection summary
+      const summary = document.getElementById('selection-summary');
+      summary.replaceChildren();
+
+      let hasFilters = false;
+      ['category', 'theme', 'vibe', 'color'].forEach(type => {
+        activeFilters[type].forEach(val => {
+          hasFilters = true;
+          const chip = document.createElement('span');
+          chip.className = 'summary-chip';
+
+          const valText = document.createTextNode(val);
+          const remove = document.createElement('span');
+          remove.className = 'remove';
+          remove.textContent = '×';
+          remove.onclick = (e) => {
+            e.stopPropagation();
+            toggleFilter(type, val);
+          };
+
+          chip.appendChild(valText);
+          chip.appendChild(remove);
+          summary.appendChild(chip);
+        });
+      });
+
+      if (!hasFilters) {
+        const noSel = document.createElement('span');
+        noSel.className = 'no-selection';
+        noSel.textContent = 'No filters selected';
+        summary.appendChild(noSel);
+      }
+
+      // Count filtered icons
+      const filtered = tagsData.icons.filter(icon => {
+        if (activeFilters.category.size && !activeFilters.category.has(icon.category)) return false;
+        if (activeFilters.theme.size && !(icon.themes || []).some(t => activeFilters.theme.has(t))) return false;
+        if (activeFilters.vibe.size && !(icon.vibes || []).some(v => activeFilters.vibe.has(v))) return false;
+        if (activeFilters.color.size && !(icon.colors || []).some(c => activeFilters.color.has(c))) return false;
+        return true;
+      });
+
+      document.getElementById('result-count').textContent = filtered.length + ' of ' + tagsData.icons.length + ' icons';
+
+      const activeCount = Object.values(activeFilters).reduce((sum, set) => sum + set.size, 0);
+      document.getElementById('filter-desc').textContent = activeCount ? activeCount + ' filters active' : 'No filters';
+    }
+
+    // Event delegation
+    document.addEventListener('click', (e) => {
+      // Toggle dropdown panels
+      if (e.target.classList.contains('filter-btn')) {
+        const dropdown = e.target.closest('.filter-dropdown');
+        const filterType = dropdown.dataset.filter;
+        togglePanel(filterType);
+        return;
+      }
+
+      // Clear section
+      if (e.target.classList.contains('panel-clear')) {
+        clearFilter(e.target.dataset.clear);
+        return;
+      }
+
+      // Close panel when clicking outside
+      if (openPanel && !e.target.closest('.filter-dropdown')) {
+        document.getElementById(openPanel + '-panel').classList.remove('open');
+        document.getElementById(openPanel + '-btn').classList.remove('open');
+        openPanel = null;
+      }
+    });
+
+    document.getElementById('clear-all').onclick = clearAll;
+
+    loadData();
+  </script>
+</body>
+</html>

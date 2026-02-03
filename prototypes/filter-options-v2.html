@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter UX - Mac OS 8 Platinum Style</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-image: url("../public/img/patterns/128.png");
+      background-repeat: repeat;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+    }
+
+    h2 {
+      background: #ccc;
+      padding: 4px 8px;
+      margin: 30px 0 0;
+      font-size: 12px;
+      font-weight: normal;
+      border: 1px solid #000;
+      border-bottom: none;
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    /* Mac OS 8 Platinum design tokens */
+    :root {
+      --platinum-light: #fff;
+      --platinum-mid: #ddd;
+      --platinum-base: #ccc;
+      --platinum-dark: #999;
+      --platinum-darker: #666;
+      --highlight-color: #316ac5; /* Classic Mac highlight blue */
+      --highlight-text: #fff;
+    }
+
+    /* Inset well - for containing controls */
+    .well {
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow:
+        inset 1px 1px 0 var(--platinum-dark),
+        inset -1px -1px 0 var(--platinum-light);
+      padding: 8px;
+    }
+
+    /* Outset panel */
+    .panel {
+      background: var(--platinum-base);
+      border: 1px solid #000;
+      box-shadow:
+        inset -1px -1px 0 var(--platinum-dark),
+        inset 1px 1px 0 var(--platinum-light);
+    }
+
+    /* Standard Platinum button */
+    .platinum-btn {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 4px 12px;
+      border: 1px solid #000;
+      background: linear-gradient(to bottom,
+        var(--platinum-light) 0%,
+        var(--platinum-mid) 40%,
+        var(--platinum-base) 100%);
+      box-shadow:
+        inset -1px -1px 0 var(--platinum-dark),
+        inset 1px 1px 0 var(--platinum-light);
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .platinum-btn:hover {
+      background: linear-gradient(to bottom,
+        #fff 0%,
+        #eee 40%,
+        #ddd 100%);
+    }
+    .platinum-btn:active {
+      background: var(--platinum-base);
+      box-shadow:
+        inset 1px 1px 2px var(--platinum-dark),
+        inset -1px -1px 0 var(--platinum-light);
+    }
+
+    /* Small button variant */
+    .platinum-btn-sm {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    /* Window frame */
+    .window {
+      background: var(--platinum-base);
+      border: 1px solid #000;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    .title-bar {
+      background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+      border-bottom: 1px solid var(--platinum-dark);
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+    }
+
+    .title-bar h3 {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: normal;
+      margin: 0;
+    }
+
+    .window-content {
+      padding: 12px;
+    }
+
+    /* ========================================
+       OPTION A: Compact Icon Palette
+       Mac OS 8 Control Panel style
+       ======================================== */
+
+    .icon-palette {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow:
+        inset 1px 1px 0 var(--platinum-dark),
+        inset -1px -1px 0 var(--platinum-light);
+    }
+
+    .icon-palette-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 8px 2px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      font-family: inherit;
+      font-size: 9px;
+      min-width: 56px;
+    }
+
+    .icon-palette-item:hover {
+      background: #eee;
+    }
+
+    .icon-palette-item.selected {
+      background: var(--highlight-color);
+      color: var(--highlight-text);
+    }
+
+    .icon-palette-item .icon-img {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 2px;
+      image-rendering: pixelated;
+    }
+
+    .icon-palette-item.selected .icon-img {
+      /* Invert icon when selected */
+      filter: brightness(0) invert(1);
+    }
+
+    /* ========================================
+       List with disclosure triangles
+       ======================================== */
+
+    .disclosure-list {
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow:
+        inset 1px 1px 0 var(--platinum-dark);
+    }
+
+    .disclosure-header {
+      display: flex;
+      align-items: center;
+      padding: 3px 6px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+      background: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+    }
+
+    .disclosure-header:hover {
+      background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+    }
+
+    .disclosure-triangle {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      margin-right: 6px;
+      transition: transform 0.1s;
+    }
+
+    .disclosure-triangle.closed {
+      border-width: 4px 0 4px 6px;
+      border-color: transparent transparent transparent #000;
+    }
+
+    .disclosure-triangle.open {
+      border-width: 6px 4px 0 4px;
+      border-color: #000 transparent transparent transparent;
+    }
+
+    .disclosure-title {
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .disclosure-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      background: var(--highlight-color);
+      color: #fff;
+      border-radius: 8px;
+    }
+
+    .disclosure-body {
+      display: none;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .disclosure-body.open {
+      display: block;
+    }
+
+    /* Selected items as pills with highlight color */
+    .selected-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      background: var(--highlight-color);
+      color: var(--highlight-text);
+      font-size: 10px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .pill:hover {
+      background: #4a7fd4;
+    }
+
+    .pill .remove {
+      font-size: 8px;
+      opacity: 0.8;
+    }
+
+    /* Tag buttons in the expanded view */
+    .tag-well {
+      background: #f5f5f5;
+      border: 1px solid #999;
+      box-shadow: inset 1px 1px 0 #ccc;
+      padding: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .tag-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .tag-btn {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 2px 6px;
+      border: 1px solid #999;
+      background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+      cursor: pointer;
+    }
+
+    .tag-btn:hover {
+      background: linear-gradient(to bottom, #fff 0%, #f5f5f5 100%);
+      border-color: #666;
+    }
+
+    .tag-btn.selected {
+      background: var(--highlight-color);
+      color: var(--highlight-text);
+      border-color: #1a4a8f;
+    }
+
+    .tag-btn .count {
+      opacity: 0.6;
+      font-size: 8px;
+    }
+
+    /* Toggle link */
+    .toggle-link {
+      font-size: 10px;
+      color: #666;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    .toggle-link:hover {
+      color: #000;
+    }
+
+    /* Color swatches in a well */
+    .color-well {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 var(--platinum-dark);
+    }
+
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #000;
+      cursor: pointer;
+    }
+
+    .color-swatch:hover {
+      outline: 1px solid #000;
+      outline-offset: 1px;
+    }
+
+    .color-swatch.selected {
+      outline: 2px solid var(--highlight-color);
+      outline-offset: 1px;
+    }
+
+    /* ========================================
+       Filter toolbar layout
+       ======================================== */
+
+    .filter-toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .filter-label {
+      font-size: 10px;
+      color: #333;
+    }
+
+    /* Separator line */
+    .separator {
+      width: 1px;
+      background: linear-gradient(to bottom, #999, #fff);
+      align-self: stretch;
+      margin: 0 4px;
+    }
+
+    /* ========================================
+       Active filters summary bar
+       ======================================== */
+
+    .active-filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
+      border-bottom: 1px solid #999;
+      min-height: 28px;
+    }
+
+    .active-label {
+      font-size: 10px;
+      color: #666;
+    }
+
+    .active-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .clear-all-btn {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 2px 8px;
+      border: 1px solid #666;
+      background: linear-gradient(to bottom, #eee 0%, #ccc 100%);
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    .clear-all-btn:hover {
+      background: linear-gradient(to bottom, #fff 0%, #ddd 100%);
+    }
+
+    /* ========================================
+       Pagination
+       ======================================== */
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 6px;
+      background: var(--platinum-base);
+    }
+
+    .page-arrow {
+      font-family: inherit;
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      border: 1px solid #000;
+      background: linear-gradient(to bottom, #fff 0%, #ddd 100%);
+      box-shadow:
+        inset -1px -1px 0 var(--platinum-dark),
+        inset 1px 1px 0 var(--platinum-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-arrow:hover {
+      background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+    }
+
+    .page-arrow:active {
+      background: var(--platinum-base);
+      box-shadow: inset 1px 1px 2px var(--platinum-dark);
+    }
+
+    .page-arrow:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .page-info {
+      font-size: 10px;
+      padding: 0 10px;
+      height: 18px;
+      line-height: 18px;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 var(--platinum-dark);
+    }
+
+    /* ========================================
+       DEMO: Full filter panel
+       ======================================== */
+
+    .demo-note {
+      background: #ffffcc;
+      border: 1px solid #cc9;
+      padding: 8px;
+      font-size: 10px;
+      margin-bottom: 12px;
+    }
+
+    /* Layout helper */
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .row > label {
+      min-width: 60px;
+      font-size: 11px;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Option A: Compact Icon Palette + Disclosure Lists</h2>
+<div class="window">
+  <div class="title-bar">
+    <h3>Filter Controls</h3>
+  </div>
+  <div class="window-content">
+
+    <div class="demo-note">
+      Categories as icon buttons (like control panel). Selection uses system highlight color, not black invert.
+    </div>
+
+    <div class="row">
+      <label>Category:</label>
+      <div class="icon-palette">
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/icons--toolbox.png" alt="">
+          <span>object</span>
+        </button>
+        <button class="icon-palette-item selected">
+          <img class="icon-img" src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>character</span>
+        </button>
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+          <span>symbol</span>
+        </button>
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/classic-x--utilities.png" alt="">
+          <span>ui</span>
+        </button>
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="disclosure-list">
+      <div class="disclosure-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('closed');">
+        <span class="disclosure-triangle open"></span>
+        <span class="disclosure-title">Theme</span>
+        <span class="disclosure-badge">3</span>
+      </div>
+      <div class="disclosure-body open">
+        <div class="selected-pills">
+          <span class="pill">food <span class="remove">×</span></span>
+          <span class="pill">japanese <span class="remove">×</span></span>
+          <span class="pill">christmas <span class="remove">×</span></span>
+        </div>
+        <span class="toggle-link" onclick="this.nextElementSibling.classList.toggle('open'); this.textContent = this.textContent.includes('Show') ? 'Hide themes' : 'Show all 70 themes...';">Show all 70 themes...</span>
+        <div class="tag-well" style="display:none; margin-top: 6px;">
+          <div class="tag-grid">
+            <button class="tag-btn selected">food <span class="count">(1627)</span></button>
+            <button class="tag-btn selected">japanese <span class="count">(729)</span></button>
+            <button class="tag-btn selected">christmas <span class="count">(471)</span></button>
+            <button class="tag-btn">hardware <span class="count">(1241)</span></button>
+            <button class="tag-btn">sports <span class="count">(708)</span></button>
+            <button class="tag-btn">scifi <span class="count">(730)</span></button>
+            <button class="tag-btn">animal <span class="count">(691)</span></button>
+            <button class="tag-btn">nature <span class="count">(603)</span></button>
+            <button class="tag-btn">fantasy <span class="count">(449)</span></button>
+            <button class="tag-btn">holiday <span class="count">(612)</span></button>
+            <button class="tag-btn">drink <span class="count">(494)</span></button>
+            <button class="tag-btn">vehicle <span class="count">(444)</span></button>
+            <button class="tag-btn">music <span class="count">(264)</span></button>
+            <button class="tag-btn">gaming <span class="count">(362)</span></button>
+            <button class="tag-btn">office <span class="count">(1220)</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclosure-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('closed');">
+        <span class="disclosure-triangle closed"></span>
+        <span class="disclosure-title">Vibe</span>
+        <span class="disclosure-badge">1</span>
+      </div>
+      <div class="disclosure-body">
+        <div class="selected-pills">
+          <span class="pill">playful <span class="remove">×</span></span>
+        </div>
+        <span class="toggle-link">Show all 41 vibes...</span>
+      </div>
+
+      <div class="disclosure-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('open'); this.querySelector('.disclosure-triangle').classList.toggle('closed');">
+        <span class="disclosure-triangle closed"></span>
+        <span class="disclosure-title">Color</span>
+      </div>
+      <div class="disclosure-body">
+        <div class="color-well">
+          <div class="color-swatch" style="background: red;"></div>
+          <div class="color-swatch selected" style="background: orange;"></div>
+          <div class="color-swatch" style="background: yellow;"></div>
+          <div class="color-swatch" style="background: green;"></div>
+          <div class="color-swatch" style="background: blue;"></div>
+          <div class="color-swatch" style="background: purple;"></div>
+          <div class="color-swatch" style="background: pink;"></div>
+          <div class="color-swatch" style="background: brown;"></div>
+          <div class="color-swatch" style="background: gray;"></div>
+          <div class="color-swatch" style="background: black;"></div>
+          <div class="color-swatch" style="background: white;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option A Variant: Horizontal Layout with Summary Bar</h2>
+<div class="window">
+  <div class="title-bar">
+    <h3>Filter Controls</h3>
+  </div>
+
+  <div class="active-filters-bar">
+    <span class="active-label">Filtering:</span>
+    <div class="active-items">
+      <span class="pill">character <span class="remove">×</span></span>
+      <span class="pill">food <span class="remove">×</span></span>
+      <span class="pill">japanese <span class="remove">×</span></span>
+      <span class="pill">playful <span class="remove">×</span></span>
+      <span class="pill" style="background:#e67300;">orange <span class="remove">×</span></span>
+    </div>
+    <button class="clear-all-btn">Clear All</button>
+  </div>
+
+  <div class="window-content">
+    <div class="filter-toolbar">
+
+      <div class="filter-section">
+        <span class="filter-label">Category</span>
+        <div class="icon-palette" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="icon-palette-item">
+            <img class="icon-img" src="../public/icons/icons--toolbox.png" alt="">
+            <span>object</span>
+          </button>
+          <button class="icon-palette-item selected">
+            <img class="icon-img" src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+            <span>character</span>
+          </button>
+          <button class="icon-palette-item">
+            <img class="icon-img" src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+            <span>symbol</span>
+          </button>
+          <button class="icon-palette-item">
+            <img class="icon-img" src="../public/icons/liquid-folders-1--utilities.png" alt="">
+            <span>ui</span>
+          </button>
+          <button class="icon-palette-item">
+            <img class="icon-img" src="../public/icons/classic-x--text.png" alt="">
+            <span>text</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="filter-section">
+        <span class="filter-label">Theme <span class="toggle-link" style="margin:0;">(show all)</span></span>
+        <div style="display:flex; flex-wrap:wrap; gap:3px; max-width: 300px;">
+          <button class="tag-btn selected">food</button>
+          <button class="tag-btn selected">japanese</button>
+          <button class="tag-btn">hardware</button>
+          <button class="tag-btn">sports</button>
+          <button class="tag-btn">scifi</button>
+          <button class="tag-btn">animal</button>
+          <button class="tag-btn">christmas</button>
+          <button class="tag-btn">fantasy</button>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="filter-section">
+        <span class="filter-label">Vibe <span class="toggle-link" style="margin:0;">(show all)</span></span>
+        <div style="display:flex; flex-wrap:wrap; gap:3px; max-width: 200px;">
+          <button class="tag-btn">technical</button>
+          <button class="tag-btn selected">playful</button>
+          <button class="tag-btn">retro</button>
+          <button class="tag-btn">cozy</button>
+          <button class="tag-btn">minimal</button>
+          <button class="tag-btn">elegant</button>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="filter-section">
+        <span class="filter-label">Color</span>
+        <div class="color-well">
+          <div class="color-swatch" style="background: red;"></div>
+          <div class="color-swatch selected" style="background: orange;"></div>
+          <div class="color-swatch" style="background: yellow;"></div>
+          <div class="color-swatch" style="background: green;"></div>
+          <div class="color-swatch" style="background: blue;"></div>
+          <div class="color-swatch" style="background: purple;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<h2>Pagination (Always Visible)</h2>
+<div class="window">
+  <div class="title-bar">
+    <h3>Pagination Styles</h3>
+  </div>
+  <div class="window-content">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+
+      <div>
+        <div class="filter-label" style="margin-bottom:4px;">Page X of Y (single page)</div>
+        <div class="pagination">
+          <button class="page-arrow" disabled>◀</button>
+          <div class="page-info">Page 1 of 1</div>
+          <button class="page-arrow" disabled>▶</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="filter-label" style="margin-bottom:4px;">Page X of Y (multi-page)</div>
+        <div class="pagination">
+          <button class="page-arrow">◀</button>
+          <div class="page-info">Page 3 of 15</div>
+          <button class="page-arrow">▶</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="filter-label" style="margin-bottom:4px;">Range of Total</div>
+        <div class="pagination">
+          <button class="page-arrow">◀</button>
+          <div class="page-info">1001–1500 of 7,394</div>
+          <button class="page-arrow">▶</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<h2>Full Panel Preview</h2>
+<div class="window" style="max-width: 900px;">
+  <div class="title-bar">
+    <h3>Icon Archive</h3>
+  </div>
+
+  <div class="active-filters-bar">
+    <span class="active-label">Filtering:</span>
+    <div class="active-items">
+      <span class="pill">character <span class="remove">×</span></span>
+      <span class="pill">food <span class="remove">×</span></span>
+      <span class="pill">playful <span class="remove">×</span></span>
+    </div>
+    <button class="clear-all-btn">Clear All</button>
+  </div>
+
+  <div class="window-content" style="padding: 8px;">
+    <div style="display: flex; gap: 12px; align-items: flex-start;">
+
+      <!-- Category palette -->
+      <div class="icon-palette" style="grid-template-columns: repeat(2, 1fr);">
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/icons--toolbox.png" alt="">
+          <span>object</span>
+        </button>
+        <button class="icon-palette-item selected">
+          <img class="icon-img" src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>character</span>
+        </button>
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+          <span>symbol</span>
+        </button>
+        <button class="icon-palette-item">
+          <img class="icon-img" src="../public/icons/liquid-folders-1--utilities.png" alt="">
+          <span>ui</span>
+        </button>
+        <button class="icon-palette-item" style="grid-column: span 2;">
+          <img class="icon-img" src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </button>
+      </div>
+
+      <!-- Theme/Vibe/Color stacked -->
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span class="filter-label" style="min-width: 45px; padding-top: 4px;">Theme:</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 3px; flex: 1;">
+            <button class="tag-btn selected">food</button>
+            <button class="tag-btn">hardware</button>
+            <button class="tag-btn">japanese</button>
+            <button class="tag-btn">sports</button>
+            <button class="tag-btn">scifi</button>
+            <button class="tag-btn">christmas</button>
+            <button class="tag-btn">animal</button>
+            <span class="toggle-link">+62 more</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span class="filter-label" style="min-width: 45px; padding-top: 4px;">Vibe:</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 3px; flex: 1;">
+            <button class="tag-btn">technical</button>
+            <button class="tag-btn selected">playful</button>
+            <button class="tag-btn">retro</button>
+            <button class="tag-btn">cozy</button>
+            <button class="tag-btn">minimal</button>
+            <button class="tag-btn">elegant</button>
+            <button class="tag-btn">spooky</button>
+            <span class="toggle-link">+34 more</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="filter-label" style="min-width: 45px;">Color:</span>
+          <div class="color-well">
+            <div class="color-swatch" style="background: red;"></div>
+            <div class="color-swatch" style="background: orange;"></div>
+            <div class="color-swatch" style="background: yellow;"></div>
+            <div class="color-swatch" style="background: green;"></div>
+            <div class="color-swatch" style="background: blue;"></div>
+            <div class="color-swatch" style="background: purple;"></div>
+            <div class="color-swatch" style="background: pink;"></div>
+            <div class="color-swatch" style="background: brown;"></div>
+            <div class="color-swatch" style="background: gray;"></div>
+            <div class="color-swatch" style="background: black;"></div>
+            <div class="color-swatch" style="background: white;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <button class="page-arrow">◀</button>
+    <div class="page-info">Page 1 of 4</div>
+    <button class="page-arrow">▶</button>
+  </div>
+</div>
+
+<script>
+  // Make tag-well toggle work
+  document.querySelectorAll('.toggle-link').forEach(link => {
+    link.addEventListener('click', function() {
+      const well = this.nextElementSibling;
+      if (well && well.classList.contains('tag-well')) {
+        well.style.display = well.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

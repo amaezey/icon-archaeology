@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter UX Options</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; }
+
+    ::selection {
+      background: #000;
+      color: #fff;
+    }
+
+    :root {
+      --button-bezel:
+        inset -1px -1px 0px 0px #777,
+        inset -2px -2px 0px 0px #aaa,
+        inset 1px 1px 0px 0px #ddd,
+        inset 2px 2px 0px 0px #fff;
+      --inset:
+        inset 1px 1px 0 #999,
+        inset -1px -1px 0 #fff;
+      --outset:
+        inset -1px -1px 0 #999,
+        inset 1px 1px 0 #fff;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #666;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+    }
+
+    h2 {
+      color: #fff;
+      margin: 30px 0 10px;
+      font-size: 14px;
+    }
+
+    h2:first-of-type { margin-top: 0; }
+
+    .option-window {
+      background: #ccc;
+      border: 1px solid #000;
+      box-shadow: 2px 2px 0 #000;
+      margin-bottom: 20px;
+    }
+
+    .option-title {
+      background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+      border-bottom: 1px solid #999;
+      padding: 4px 8px;
+      font-weight: normal;
+      font-size: 12px;
+    }
+
+    .option-content {
+      padding: 12px;
+    }
+
+    /* Shared styles */
+    .btn {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 3px 8px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+    .btn:hover { background: #eee; }
+    .btn:active, .btn.active {
+      background: #000;
+      color: #fff;
+      box-shadow: inset 1px 1px 2px #000;
+    }
+
+    .tag {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tag:hover { background: #eee; }
+    .tag.active {
+      background: #000;
+      color: #fff;
+      box-shadow: inset 1px 1px 2px #000;
+    }
+    .tag .remove {
+      font-size: 8px;
+      opacity: 0.7;
+    }
+
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #000;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .color-swatch:hover { outline: 2px solid #000; outline-offset: 1px; }
+    .color-swatch.active { outline: 2px solid #000; outline-offset: 1px; }
+
+    /* ========================================
+       OPTION A: Icon Palette + Collapsible
+       ======================================== */
+    .option-a .category-palette {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: var(--inset);
+    }
+
+    .option-a .category-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 9px;
+      min-width: 54px;
+    }
+    .option-a .category-btn:hover {
+      background: #ddd;
+      border: 1px dotted #000;
+    }
+    .option-a .category-btn.active {
+      background: #000;
+      color: #fff;
+    }
+    .option-a .category-btn .icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .option-a .category-btn.active .icon {
+      filter: invert(1);
+    }
+
+    .option-a .filter-section {
+      margin-bottom: 8px;
+    }
+
+    .option-a .filter-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      cursor: pointer;
+      border-bottom: 1px solid #999;
+    }
+    .option-a .filter-header:hover { background: #ddd; }
+
+    .option-a .disclosure {
+      font-size: 8px;
+      width: 12px;
+    }
+
+    .option-a .filter-name {
+      flex: 1;
+    }
+
+    .option-a .active-count {
+      font-size: 9px;
+      color: #666;
+    }
+
+    .option-a .filter-body {
+      padding: 8px 0 8px 16px;
+      display: none;
+    }
+    .option-a .filter-body.open { display: block; }
+
+    .option-a .active-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .option-a .chip {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: #000;
+      color: #fff;
+      border: 1px solid #000;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .option-a .chip .x { font-size: 8px; }
+
+    .option-a .show-all {
+      font-size: 9px;
+      color: #666;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .option-a .all-tags {
+      display: none;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 8px;
+      background: #eee;
+      border: 1px solid #999;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .option-a .all-tags.open { display: flex; }
+
+    /* ========================================
+       OPTION B: Active Bar + Popups
+       ======================================== */
+    .option-b .active-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: var(--inset);
+      margin-bottom: 8px;
+      min-height: 32px;
+    }
+
+    .option-b .active-label {
+      font-size: 10px;
+      color: #666;
+    }
+
+    .option-b .active-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .option-b .chip {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: #000;
+      color: #fff;
+      border: 1px solid #000;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .option-b .chip .type { opacity: 0.6; font-size: 9px; }
+    .option-b .chip .x { font-size: 8px; margin-left: 2px; }
+
+    .option-b .clear-all {
+      font-size: 9px;
+      padding: 2px 6px;
+      border: 1px solid #666;
+      background: #ccc;
+      cursor: pointer;
+    }
+
+    .option-b .dropdown-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .option-b .dropdown-container {
+      position: relative;
+    }
+
+    .option-b .dropdown-btn {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 20px 4px 8px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: var(--inset);
+      cursor: pointer;
+      min-width: 100px;
+      text-align: left;
+      position: relative;
+    }
+    .option-b .dropdown-btn::after {
+      content: '▾';
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 8px;
+    }
+
+    .option-b .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      max-height: 200px;
+      overflow-y: auto;
+      min-width: 150px;
+      z-index: 100;
+    }
+    .option-b .dropdown-menu.open { display: block; }
+
+    .option-b .dropdown-item {
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .option-b .dropdown-item:hover { background: #000; color: #fff; }
+    .option-b .dropdown-item.selected { font-weight: bold; }
+    .option-b .dropdown-item .count { opacity: 0.6; font-size: 9px; }
+
+    .option-b .color-row {
+      display: flex;
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: var(--inset);
+    }
+
+    /* ========================================
+       OPTION C: Tabbed Panel
+       ======================================== */
+    .option-c .tab-bar {
+      display: flex;
+      border-bottom: 1px solid #000;
+    }
+
+    .option-c .tab {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 6px 16px;
+      border: 1px solid #000;
+      border-bottom: none;
+      background: #aaa;
+      cursor: pointer;
+      margin-right: -1px;
+      position: relative;
+    }
+    .option-c .tab:hover { background: #bbb; }
+    .option-c .tab.active {
+      background: #fff;
+      z-index: 1;
+    }
+    .option-c .tab .badge {
+      font-size: 8px;
+      background: #000;
+      color: #fff;
+      padding: 1px 4px;
+      border-radius: 8px;
+      margin-left: 4px;
+    }
+
+    .option-c .tab-content {
+      background: #fff;
+      border: 1px solid #000;
+      border-top: none;
+      padding: 12px;
+      min-height: 120px;
+    }
+
+    .option-c .category-grid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .option-c .category-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      border: 2px solid transparent;
+      background: #eee;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 9px;
+      min-width: 64px;
+    }
+    .option-c .category-btn:hover {
+      border-color: #999;
+    }
+    .option-c .category-btn.active {
+      border-color: #000;
+      background: #ddd;
+    }
+    .option-c .category-btn .icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .option-c .current-selection {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #ccc;
+      font-size: 10px;
+      color: #666;
+    }
+    .option-c .current-selection strong { color: #000; }
+
+    .option-c .tag-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .option-c .search-in-tab {
+      width: 100%;
+      padding: 4px 6px;
+      margin-bottom: 8px;
+      border: 1px solid #000;
+      box-shadow: var(--inset);
+      font-family: inherit;
+      font-size: 11px;
+    }
+
+    /* ========================================
+       OPTION D: Sidebar Drawer
+       ======================================== */
+    .option-d .layout {
+      display: flex;
+      gap: 0;
+      height: 280px;
+    }
+
+    .option-d .sidebar {
+      width: 160px;
+      background: #eee;
+      border-right: 1px solid #999;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .option-d .sidebar-section {
+      border-bottom: 1px solid #ccc;
+    }
+
+    .option-d .sidebar-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 11px;
+      background: #ddd;
+      border-bottom: 1px solid #999;
+    }
+    .option-d .sidebar-header:hover { background: #ccc; }
+    .option-d .sidebar-header .disclosure {
+      font-size: 8px;
+      margin-right: 6px;
+    }
+
+    .option-d .sidebar-body {
+      display: none;
+      padding: 4px 0;
+    }
+    .option-d .sidebar-body.open { display: block; }
+
+    .option-d .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 3px 8px 3px 20px;
+      cursor: pointer;
+      font-size: 10px;
+    }
+    .option-d .sidebar-item:hover { background: #ddd; }
+    .option-d .sidebar-item.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .option-d .sidebar-item .radio {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      margin-right: 6px;
+      background: #fff;
+    }
+    .option-d .sidebar-item.active .radio {
+      background: #fff;
+      box-shadow: inset 0 0 0 3px #000;
+    }
+
+    .option-d .sidebar-item .checkbox {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #000;
+      margin-right: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+    .option-d .sidebar-item.checked .checkbox::after {
+      content: '✓';
+    }
+
+    .option-d .sidebar-search {
+      width: calc(100% - 16px);
+      margin: 4px 8px;
+      padding: 2px 4px;
+      border: 1px solid #000;
+      box-shadow: var(--inset);
+      font-family: inherit;
+      font-size: 10px;
+    }
+
+    .option-d .main-area {
+      flex: 1;
+      background: #fff;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .option-d .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    .option-d .icon-placeholder {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+    }
+
+    /* ========================================
+       PAGINATION OPTIONS
+       ======================================== */
+    .pagination-demo {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .pagination-option {
+      background: #ccc;
+      padding: 8px;
+    }
+
+    .pagination-label {
+      font-size: 9px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .page-arrow {
+      font-family: inherit;
+      font-size: 10px;
+      width: 20px;
+      height: 18px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .page-arrow:hover { background: #eee; }
+    .page-arrow:disabled { opacity: 0.5; }
+
+    .page-info {
+      font-size: 10px;
+      padding: 0 8px;
+      height: 18px;
+      line-height: 18px;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      background: #fff;
+      box-shadow: var(--inset);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Option A: Icon Palette + Collapsible Drawers</h2>
+<div class="option-window">
+  <div class="option-title">Filter Controls</div>
+  <div class="option-content option-a">
+
+    <div class="category-palette">
+      <button class="category-btn">
+        <div class="icon">📦</div>
+        <span>object</span>
+      </button>
+      <button class="category-btn active">
+        <div class="icon">👤</div>
+        <span>character</span>
+      </button>
+      <button class="category-btn">
+        <div class="icon">⬡</div>
+        <span>symbol</span>
+      </button>
+      <button class="category-btn">
+        <div class="icon">🖼</div>
+        <span>ui</span>
+      </button>
+      <button class="category-btn">
+        <div class="icon">Aa</div>
+        <span>text</span>
+      </button>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="disclosure">▼</span>
+        <span class="filter-name">Theme</span>
+        <span class="active-count">3 selected</span>
+      </div>
+      <div class="filter-body open">
+        <div class="active-chips">
+          <span class="chip">food <span class="x">×</span></span>
+          <span class="chip">japanese <span class="x">×</span></span>
+          <span class="chip">christmas <span class="x">×</span></span>
+        </div>
+        <span class="show-all" onclick="this.nextElementSibling.classList.toggle('open')">Show all 70 themes...</span>
+        <div class="all-tags">
+          <button class="tag active">food</button>
+          <button class="tag active">japanese</button>
+          <button class="tag active">christmas</button>
+          <button class="tag">hardware</button>
+          <button class="tag">sports</button>
+          <button class="tag">scifi</button>
+          <button class="tag">fantasy</button>
+          <button class="tag">music</button>
+          <button class="tag">animal</button>
+          <button class="tag">nature</button>
+          <button class="tag">vehicle</button>
+          <button class="tag">office</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="disclosure">▶</span>
+        <span class="filter-name">Vibe</span>
+        <span class="active-count">1 selected</span>
+      </div>
+      <div class="filter-body">
+        <div class="active-chips">
+          <span class="chip">playful <span class="x">×</span></span>
+        </div>
+        <span class="show-all">Show all 41 vibes...</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-header">
+        <span class="disclosure">▶</span>
+        <span class="filter-name">Color</span>
+        <span class="active-count"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option B: Active Filters Bar + Dropdown Menus</h2>
+<div class="option-window">
+  <div class="option-title">Filter Controls</div>
+  <div class="option-content option-b">
+
+    <div class="active-bar">
+      <span class="active-label">Active:</span>
+      <div class="active-chips">
+        <span class="chip"><span class="type">cat:</span> character <span class="x">×</span></span>
+        <span class="chip"><span class="type">theme:</span> food <span class="x">×</span></span>
+        <span class="chip"><span class="type">vibe:</span> playful <span class="x">×</span></span>
+        <span class="chip"><span class="type">color:</span> <span style="display:inline-block;width:10px;height:10px;background:red;border:1px solid #000;"></span> <span class="x">×</span></span>
+      </div>
+      <button class="clear-all">Clear All</button>
+    </div>
+
+    <div class="dropdown-row">
+      <div class="dropdown-container">
+        <button class="dropdown-btn" onclick="this.nextElementSibling.classList.toggle('open')">Category ▾</button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item">object <span class="count">(3,241)</span></div>
+          <div class="dropdown-item selected">character <span class="count">(1,892)</span></div>
+          <div class="dropdown-item">symbol <span class="count">(845)</span></div>
+          <div class="dropdown-item">ui <span class="count">(1,102)</span></div>
+          <div class="dropdown-item">text <span class="count">(314)</span></div>
+        </div>
+      </div>
+
+      <div class="dropdown-container">
+        <button class="dropdown-btn" onclick="this.nextElementSibling.classList.toggle('open')">Theme ▾</button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item selected">food <span class="count">(1,627)</span></div>
+          <div class="dropdown-item">hardware <span class="count">(1,241)</span></div>
+          <div class="dropdown-item">japanese <span class="count">(729)</span></div>
+          <div class="dropdown-item">sports <span class="count">(708)</span></div>
+          <div class="dropdown-item">scifi <span class="count">(730)</span></div>
+          <div class="dropdown-item">christmas <span class="count">(471)</span></div>
+        </div>
+      </div>
+
+      <div class="dropdown-container">
+        <button class="dropdown-btn" onclick="this.nextElementSibling.classList.toggle('open')">Vibe ▾</button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item">technical <span class="count">(3,108)</span></div>
+          <div class="dropdown-item selected">playful <span class="count">(1,884)</span></div>
+          <div class="dropdown-item">retro <span class="count">(974)</span></div>
+          <div class="dropdown-item">cozy <span class="count">(973)</span></div>
+          <div class="dropdown-item">minimal <span class="count">(649)</span></div>
+        </div>
+      </div>
+
+      <div class="color-row">
+        <div class="color-swatch active" style="background: red;"></div>
+        <div class="color-swatch" style="background: orange;"></div>
+        <div class="color-swatch" style="background: yellow;"></div>
+        <div class="color-swatch" style="background: green;"></div>
+        <div class="color-swatch" style="background: blue;"></div>
+        <div class="color-swatch" style="background: purple;"></div>
+        <div class="color-swatch" style="background: pink;"></div>
+        <div class="color-swatch" style="background: brown;"></div>
+        <div class="color-swatch" style="background: gray;"></div>
+        <div class="color-swatch" style="background: black;"></div>
+        <div class="color-swatch" style="background: white;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option C: Tabbed Filter Panel</h2>
+<div class="option-window">
+  <div class="option-title">Filter Controls</div>
+  <div class="option-content option-c">
+
+    <div class="tab-bar">
+      <button class="tab active">Category<span class="badge">1</span></button>
+      <button class="tab">Theme<span class="badge">2</span></button>
+      <button class="tab">Vibe<span class="badge">1</span></button>
+      <button class="tab">Color</button>
+    </div>
+
+    <div class="tab-content">
+      <div class="category-grid">
+        <button class="category-btn">
+          <div class="icon">📦</div>
+          <span>object</span>
+        </button>
+        <button class="category-btn active">
+          <div class="icon">👤</div>
+          <span>character</span>
+        </button>
+        <button class="category-btn">
+          <div class="icon">⬡</div>
+          <span>symbol</span>
+        </button>
+        <button class="category-btn">
+          <div class="icon">🖼</div>
+          <span>ui</span>
+        </button>
+        <button class="category-btn">
+          <div class="icon">Aa</div>
+          <span>text</span>
+        </button>
+      </div>
+
+      <div class="current-selection">
+        Currently showing: <strong>character</strong> (1,892 icons)
+      </div>
+    </div>
+
+    <!-- Hidden tab content examples -->
+    <div class="tab-content" style="display:none;">
+      <input type="text" class="search-in-tab" placeholder="Search themes...">
+      <div class="tag-grid">
+        <button class="tag active">food (1,627)</button>
+        <button class="tag active">japanese (729)</button>
+        <button class="tag">hardware (1,241)</button>
+        <button class="tag">sports (708)</button>
+        <button class="tag">scifi (730)</button>
+        <button class="tag">christmas (471)</button>
+        <button class="tag">animal (691)</button>
+        <button class="tag">nature (603)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option D: Sidebar Drawer (Finder-style)</h2>
+<div class="option-window">
+  <div class="option-title">Icon Archive</div>
+  <div class="option-content option-d" style="padding: 0;">
+
+    <div class="layout">
+      <div class="sidebar">
+
+        <div class="sidebar-section">
+          <div class="sidebar-header" onclick="this.nextElementSibling.classList.toggle('open')">
+            <span class="disclosure">▼</span>
+            Category
+          </div>
+          <div class="sidebar-body open">
+            <div class="sidebar-item">
+              <span class="radio"></span>
+              object
+            </div>
+            <div class="sidebar-item active">
+              <span class="radio"></span>
+              character
+            </div>
+            <div class="sidebar-item">
+              <span class="radio"></span>
+              symbol
+            </div>
+            <div class="sidebar-item">
+              <span class="radio"></span>
+              ui
+            </div>
+            <div class="sidebar-item">
+              <span class="radio"></span>
+              text
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-header" onclick="this.nextElementSibling.classList.toggle('open')">
+            <span class="disclosure">▼</span>
+            Theme
+          </div>
+          <div class="sidebar-body open">
+            <input type="text" class="sidebar-search" placeholder="Search...">
+            <div class="sidebar-item checked">
+              <span class="checkbox"></span>
+              food
+            </div>
+            <div class="sidebar-item checked">
+              <span class="checkbox"></span>
+              japanese
+            </div>
+            <div class="sidebar-item">
+              <span class="checkbox"></span>
+              hardware
+            </div>
+            <div class="sidebar-item">
+              <span class="checkbox"></span>
+              sports
+            </div>
+            <div class="sidebar-item">
+              <span class="checkbox"></span>
+              scifi
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-header">
+            <span class="disclosure">▶</span>
+            Vibe
+          </div>
+          <div class="sidebar-body"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-header">
+            <span class="disclosure">▶</span>
+            Color
+          </div>
+          <div class="sidebar-body"></div>
+        </div>
+
+      </div>
+
+      <div class="main-area">
+        <div class="icon-grid">
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Pagination Options (Always Show)</h2>
+<div class="option-window">
+  <div class="option-title">Pagination Styles</div>
+  <div class="option-content">
+    <div class="pagination-demo">
+
+      <div class="pagination-option">
+        <div class="pagination-label">Style 1: Page X of Y</div>
+        <div class="pagination">
+          <button class="page-arrow">◁</button>
+          <div class="page-info">Page 3 of 15</div>
+          <button class="page-arrow">▷</button>
+        </div>
+      </div>
+
+      <div class="pagination-option">
+        <div class="pagination-label">Style 2: Range of Total</div>
+        <div class="pagination">
+          <button class="page-arrow">◁</button>
+          <div class="page-info">1001-1500 of 7,394</div>
+          <button class="page-arrow">▷</button>
+        </div>
+      </div>
+
+      <div class="pagination-option">
+        <div class="pagination-label">Style 3: Compact</div>
+        <div class="pagination">
+          <button class="page-arrow">◁</button>
+          <div class="page-info">3 / 15</div>
+          <button class="page-arrow">▷</button>
+        </div>
+      </div>
+
+      <div class="pagination-option">
+        <div class="pagination-label">Style 4: First Page (1 of 1)</div>
+        <div class="pagination">
+          <button class="page-arrow" disabled>◁</button>
+          <div class="page-info">Page 1 of 1</div>
+          <button class="page-arrow" disabled>▷</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

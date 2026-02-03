@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter UX - Real Data</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #9999cc;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    .window {
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+      margin-bottom: 20px;
+    }
+
+    .title-bar {
+      height: 20px;
+      background: repeating-linear-gradient(to bottom, #ddd 0px, #ddd 1px, #aaa 1px, #aaa 2px);
+      border-bottom: 1px solid #888;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      position: relative;
+    }
+
+    .close-box {
+      width: 13px;
+      height: 11px;
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+    }
+
+    .title-bar h1 {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: normal;
+      background: #ddd;
+      padding: 0 8px;
+    }
+
+    .window-content { padding: 10px; }
+
+    .button {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 2px 12px;
+      border: 1px solid #000;
+      border-radius: 4px;
+      background: #ddd;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+      cursor: pointer;
+    }
+    .button:active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 0 #888;
+    }
+
+    .category-palette {
+      display: flex;
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .category-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 8px 2px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 9px;
+    }
+
+    .category-item img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      margin-bottom: 2px;
+    }
+
+    .category-item span { padding: 1px 3px; }
+
+    .category-item.selected span {
+      background: #333366;
+      color: #fff;
+    }
+
+    .list-box {
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      padding: 1px 4px;
+      cursor: pointer;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .list-item.selected {
+      background: #333366;
+      color: #fff;
+    }
+
+    .list-item .count {
+      color: #888;
+      font-size: 10px;
+    }
+
+    .list-item.selected .count { color: #aaa; }
+
+    .list-box::-webkit-scrollbar { width: 16px; }
+    .list-box::-webkit-scrollbar-track {
+      background: #ddd;
+      border-left: 1px solid #888;
+    }
+    .list-box::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+    }
+    .list-box::-webkit-scrollbar-button {
+      height: 16px;
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+    }
+    .list-box::-webkit-scrollbar-button:vertical:decrement {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M4 0L0 4h8z" fill="%23000"/></svg>');
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .list-box::-webkit-scrollbar-button:vertical:increment {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M4 4L0 0h8z" fill="%23000"/></svg>');
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .color-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(6, 14px);
+      gap: 1px;
+      padding: 3px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .color-cell {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #666;
+      cursor: pointer;
+    }
+    .color-cell.selected { border: 2px solid #000; }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .filter-row > label {
+      min-width: 55px;
+      font-size: 12px;
+      text-align: right;
+      padding-top: 2px;
+    }
+
+    .filter-group-label {
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #888;
+      border-bottom: 1px solid #fff;
+      margin: 8px 0;
+    }
+
+    .status { font-size: 11px; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      background: #ddd;
+      border-top: 1px solid #fff;
+    }
+
+    .page-btn {
+      width: 16px;
+      height: 14px;
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+      cursor: pointer;
+      font-size: 8px;
+    }
+    .page-btn:disabled { opacity: 0.5; }
+
+    .page-text { font-size: 10px; padding: 0 8px; }
+
+    h2 {
+      font-size: 12px;
+      font-weight: normal;
+      color: #fff;
+      background: #666699;
+      padding: 2px 6px;
+      margin: 16px 0 8px;
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    .multi-col-list {
+      display: flex;
+      gap: 0;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .multi-col-list .list-col {
+      flex: 1;
+      max-height: 200px;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+    }
+
+    .multi-col-list .list-col:last-child { border-right: none; }
+  </style>
+</head>
+<body>
+
+<h2>Option A: Side-by-side Scrolling Lists (70 themes, 41 vibes)</h2>
+<div class="window" style="max-width: 720px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Icon Archive - Filters</h1>
+  </div>
+  <div class="window-content">
+
+    <div class="filter-row">
+      <label>Category:</label>
+      <div class="category-palette" id="cat-a"></div>
+    </div>
+
+    <div class="filter-row">
+      <label>Theme:</label>
+      <div class="list-box" id="theme-a" style="width: 160px; height: 160px;"></div>
+
+      <label>Vibe:</label>
+      <div class="list-box" id="vibe-a" style="width: 140px; height: 160px;"></div>
+
+      <label>Color:</label>
+      <div class="color-grid" id="color-a"></div>
+    </div>
+
+    <hr>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">70 themes, 41 vibes, 30 colors • 7,394 icons</span>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+  <div class="pagination">
+    <button class="page-btn">◀</button>
+    <span class="page-text">Page 1 of 15</span>
+    <button class="page-btn">▶</button>
+  </div>
+</div>
+
+
+<h2>Option B: 3-Column Theme List</h2>
+<div class="window" style="max-width: 750px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Icon Archive - Filters</h1>
+  </div>
+  <div class="window-content">
+
+    <div class="filter-row">
+      <label>Category:</label>
+      <div class="category-palette" id="cat-b"></div>
+      <label style="margin-left: 16px;">Color:</label>
+      <div class="color-grid" id="color-b" style="grid-template-columns: repeat(5, 14px);"></div>
+    </div>
+
+    <div class="filter-row">
+      <label>Theme:</label>
+      <div class="multi-col-list" id="theme-multi" style="flex: 1;"></div>
+    </div>
+
+    <div class="filter-row">
+      <label>Vibe:</label>
+      <div class="list-box" id="vibe-b" style="height: 90px; flex: 1;"></div>
+    </div>
+
+    <hr>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">70 themes (3 columns), 41 vibes • 7,394 icons</span>
+      <button class="button">Clear All</button>
+    </div>
+  </div>
+</div>
+
+
+<h2>Option C: Compact Vertical Layout</h2>
+<div class="window" style="max-width: 520px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Icon Archive</h1>
+  </div>
+  <div class="window-content">
+
+    <div style="display: flex; gap: 8px;">
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div>
+          <div class="filter-group-label">Category:</div>
+          <div class="category-palette" id="cat-c" style="flex-direction: column; width: auto;"></div>
+        </div>
+        <div>
+          <div class="filter-group-label">Color:</div>
+          <div class="color-grid" id="color-c" style="grid-template-columns: repeat(3, 14px);"></div>
+        </div>
+      </div>
+
+      <div style="flex: 1;">
+        <div class="filter-group-label">Theme (70):</div>
+        <div class="list-box" id="theme-c" style="height: 240px;"></div>
+      </div>
+
+      <div style="flex: 1;">
+        <div class="filter-group-label">Vibe (41):</div>
+        <div class="list-box" id="vibe-c" style="height: 240px;"></div>
+      </div>
+
+    </div>
+
+    <hr>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">7,394 icons</span>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+  <div class="pagination">
+    <button class="page-btn">◀</button>
+    <span class="page-text">Page 1 of 15</span>
+    <button class="page-btn">▶</button>
+  </div>
+</div>
+
+
+<script>
+// Embedded real data
+const THEMES = [["retro", 2458], ["food", 1627], ["ui", 1280], ["hardware", 1241], ["cute", 1234], ["office", 1220], ["apple", 1215], ["kitchen", 950], ["scifi", 730], ["japanese", 729], ["sports", 708], ["animal", 691], ["holiday", 612], ["nature", 603], ["drink", 494], ["folder", 482], ["christmas", 471], ["fantasy", 449], ["vehicle", 444], ["fashion", 424], ["dessert", 382], ["military", 365], ["gaming", 362], ["horror", 343], ["football", 322], ["art", 297], ["portrait", 274], ["music", 264], ["science", 259], ["space", 221], ["symbol", 195], ["cartoon", 172], ["heraldry", 165], ["starwars", 131], ["halloween", 130], ["anime", 125], ["household", 125], ["communication", 117], ["tools", 82], ["spooky", 79], ["sketch", 67], ["coffee", 56], ["geometric", 48], ["technical", 48], ["olympics", 47], ["internet", 47], ["toy", 42], ["minimal", 41], ["western", 40], ["fish", 33], ["winter", 31], ["3d", 30], ["valentine", 30], ["cat", 29], ["irish", 27], ["cultural", 23], ["outdoor", 22], ["robot", 18], ["urban", 16], ["korean", 16], ["spring", 15], ["film", 14], ["plant", 14], ["medieval", 12], ["cozy", 3], ["heraldic", 3], ["medical", 2], ["racing", 1], ["spicy", 1], ["italian", 1]];
+const VIBES = [["technical", 3108], ["playful", 1884], ["retro", 974], ["cozy", 973], ["minimal", 649], ["elegant", 584], ["spooky", 389], ["festive", 384], ["quirky", 338], ["heroic", 263], ["rustic", 222], ["cheerful", 212], ["fantasy", 189], ["mystical", 110], ["cute", 70], ["dramatic", 62], ["fierce", 42], ["adventurous", 41], ["mysterious", 39], ["whimsical", 20], ["ancient", 19], ["majestic", 15], ["patriotic", 9], ["traditional", 4], ["practical", 3], ["medieval", 2], ["refreshing", 2], ["wise", 2], ["formal", 1], ["artistic", 1], ["professional", 1], ["scholarly", 1], ["military", 1], ["authoritative", 1], ["cool", 1], ["clean", 1], ["fresh", 1], ["decorative", 1], ["celebratory", 1], ["creative", 1], ["powerful", 1]];
+const COLORS = [["blue", 2205], ["white", 2154], ["red", 1842], ["brown", 1564], ["black", 1400], ["gray", 1365], ["yellow", 1324], ["green", 1221], ["orange", 1203], ["purple", 644], ["pink", 255], ["teal", 134], ["tan", 124], ["gold", 88], ["silver", 71], ["beige", 66], ["cyan", 22], ["peach", 11], ["grey", 7], ["clear", 5], ["amber", 3], ["bronze", 3], ["cream", 3], ["multicolor", 3], ["magenta", 2], ["rainbow", 2], ["blonde", 2], ["turquoise", 2], ["burgundy", 1], ["lime", 1]];
+const CATEGORIES = {"object": 4286, "character": 1341, "symbol": 532, "ui": 1207, "text": 28};
+
+const CAT_ICONS = {
+  'object': '../public/icons/icons--toolbox.png',
+  'character': '../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png',
+  'symbol': '../public/icons/a-long-time-ago--galactic-republic-symbol.png',
+  'ui': '../public/icons/classic-x--utilities.png',
+  'text': '../public/icons/classic-x--text.png'
+};
+
+function renderCategories(id, selected) {
+  var container = document.getElementById(id);
+  ['object', 'character', 'symbol', 'ui', 'text'].forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className = 'category-item' + (cat === selected ? ' selected' : '');
+
+    var img = document.createElement('img');
+    img.src = CAT_ICONS[cat];
+
+    var span = document.createElement('span');
+    span.textContent = cat;
+
+    btn.appendChild(img);
+    btn.appendChild(span);
+
+    btn.onclick = function() {
+      container.querySelectorAll('.category-item').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+    };
+
+    container.appendChild(btn);
+  });
+}
+
+function renderList(id, items, selected) {
+  var container = document.getElementById(id);
+  items.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'list-item' + (selected.indexOf(item[0]) >= 0 ? ' selected' : '');
+
+    var text = document.createTextNode(item[0] + ' ');
+    var count = document.createElement('span');
+    count.className = 'count';
+    count.textContent = '(' + item[1] + ')';
+
+    div.appendChild(text);
+    div.appendChild(count);
+
+    div.onclick = function() { div.classList.toggle('selected'); };
+    container.appendChild(div);
+  });
+}
+
+function renderMultiCol(id, items, cols, selected) {
+  var container = document.getElementById(id);
+  var perCol = Math.ceil(items.length / cols);
+
+  for (var c = 0; c < cols; c++) {
+    var col = document.createElement('div');
+    col.className = 'list-col';
+
+    var start = c * perCol;
+    var end = Math.min(start + perCol, items.length);
+
+    for (var i = start; i < end; i++) {
+      var item = items[i];
+      var div = document.createElement('div');
+      div.className = 'list-item' + (selected.indexOf(item[0]) >= 0 ? ' selected' : '');
+
+      var text = document.createTextNode(item[0] + ' ');
+      var count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = '(' + item[1] + ')';
+
+      div.appendChild(text);
+      div.appendChild(count);
+      div.onclick = function() { this.classList.toggle('selected'); };
+      col.appendChild(div);
+    }
+
+    container.appendChild(col);
+  }
+}
+
+function renderColors(id, items, selected) {
+  var container = document.getElementById(id);
+  items.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'color-cell' + (item[0] === selected ? ' selected' : '');
+    div.style.background = item[0];
+    div.title = item[0] + ' (' + item[1] + ')';
+    div.onclick = function() {
+      container.querySelectorAll('.color-cell').forEach(function(c) { c.classList.remove('selected'); });
+      div.classList.add('selected');
+    };
+    container.appendChild(div);
+  });
+}
+
+// Render all options
+renderCategories('cat-a', 'character');
+renderList('theme-a', THEMES, ['food', 'japanese']);
+renderList('vibe-a', VIBES, ['playful']);
+renderColors('color-a', COLORS.slice(0, 12), 'orange');
+
+renderCategories('cat-b', 'character');
+renderMultiCol('theme-multi', THEMES, 3, ['food']);
+renderList('vibe-b', VIBES, ['playful']);
+renderColors('color-b', COLORS.slice(0, 10), null);
+
+renderCategories('cat-c', 'character');
+renderList('theme-c', THEMES, ['food', 'japanese']);
+renderList('vibe-c', VIBES, ['playful']);
+renderColors('color-c', COLORS.slice(0, 12), 'orange');
+</script>
+
+</body>
+</html>

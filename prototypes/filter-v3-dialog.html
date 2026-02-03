@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter V3: Filter Dialog</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; }
+    ::selection { background: #000; color: #fff; }
+
+    :root {
+      --button-bezel: inset -1px -1px 0px 0px #777, inset -2px -2px 0px 0px #aaa, inset 1px 1px 0px 0px #ddd, inset 2px 2px 0px 0px #fff;
+      --pressed-bezel: inset 1px 1px 2px #000;
+      --field-bezel: inset 1px 1px 0 #999;
+      --window-bezel: 1px 2px #111, inset 1px 1px 0px 0px #fff, inset -1px -1px 0px 0px #999;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #ccc;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+    }
+
+    /* FILTER BAR - Compact summary with open button */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #ccc;
+      border-bottom: 1px solid #999;
+    }
+
+    .filters-btn {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 12px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filters-btn:hover { background: #eee; }
+    .filters-btn:active { box-shadow: var(--pressed-bezel); }
+
+    .filters-btn .filter-icon {
+      font-size: 10px;
+    }
+
+    .filters-btn.has-filters {
+      background: #000;
+      color: #fff;
+    }
+
+    /* Active filters display */
+    .active-display {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      padding: 2px 4px 2px 6px;
+      background: #000;
+      color: #fff;
+      border: 1px solid #000;
+    }
+
+    .filter-chip .chip-type {
+      font-size: 8px;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .filter-chip .remove {
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    .filter-chip .remove:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .no-filters-text {
+      font-size: 10px;
+      color: #666;
+    }
+
+    .clear-all-link {
+      font-size: 10px;
+      color: #000;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .clear-all-link:hover {
+      color: #666;
+    }
+
+    /* DIALOG OVERLAY */
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 100;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      overflow-y: auto;
+    }
+
+    .dialog-overlay.open {
+      display: flex;
+    }
+
+    /* DIALOG WINDOW */
+    .dialog {
+      width: 100%;
+      max-width: 500px;
+      background: #ccc;
+      border: 1px solid #111;
+      box-shadow: var(--window-bezel), 4px 4px 0 rgba(0,0,0,0.3);
+    }
+
+    .dialog-title-bar {
+      display: flex;
+      align-items: center;
+      padding: 3px 6px;
+      background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+      border-bottom: 1px solid #999;
+    }
+
+    .dialog-title {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .dialog-close {
+      width: 13px;
+      height: 13px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+      cursor: pointer;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dialog-close:hover {
+      background: #eee;
+    }
+
+    .dialog-body {
+      padding: 12px;
+    }
+
+    /* FILTER GROUPS IN DIALOG */
+    .filter-group {
+      margin-bottom: 12px;
+    }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid #999;
+    }
+
+    .group-title {
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .group-summary {
+      font-size: 9px;
+      color: #666;
+    }
+
+    .group-clear {
+      font-family: inherit;
+      font-size: 9px;
+      padding: 1px 4px;
+      border: 1px solid #666;
+      background: #ccc;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    .group-clear:hover { background: #ddd; }
+
+    /* Scrollable checkbox area */
+    .checkbox-scroll {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #ddd;
+      border: 1px solid #999;
+      box-shadow: var(--field-bezel);
+      padding: 4px;
+    }
+
+    .checkbox-scroll::-webkit-scrollbar { width: 14px; }
+    .checkbox-scroll::-webkit-scrollbar-track { background: #ccc; border-left: 1px solid #999; }
+    .checkbox-scroll::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+    }
+
+    /* Two-column checkbox layout */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    .checkbox-row:hover {
+      background: #ccc;
+    }
+
+    .checkbox-row.checked {
+      background: #000;
+      color: #fff;
+    }
+
+    .cb-box {
+      width: 11px;
+      height: 11px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+
+    .checkbox-row.checked .cb-box::after {
+      content: "✓";
+      color: #000;
+    }
+
+    .cb-label {
+      flex: 1;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cb-count {
+      font-size: 9px;
+      opacity: 0.6;
+    }
+
+    /* Color grid */
+    .color-scroll {
+      background: #ddd;
+      border: 1px solid #999;
+      box-shadow: var(--field-bezel);
+      padding: 6px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(22px, 1fr));
+      gap: 4px;
+    }
+
+    .color-box {
+      width: 22px;
+      height: 22px;
+      border: 1px solid #000;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .color-box:hover {
+      outline: 2px solid #666;
+      outline-offset: 1px;
+    }
+
+    .color-box.checked {
+      outline: 2px solid #000;
+      outline-offset: 1px;
+    }
+
+    .color-box.checked::after {
+      content: "✓";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 0 0 2px #000, 0 0 2px #000;
+    }
+
+    /* Dialog footer */
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #bbb;
+      border-top: 1px solid #999;
+    }
+
+    .dialog-btn {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 16px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+
+    .dialog-btn:hover { background: #eee; }
+    .dialog-btn:active { box-shadow: var(--pressed-bezel); }
+
+    .dialog-btn.primary {
+      background: #000;
+      color: #fff;
+      box-shadow: none;
+    }
+
+    .dialog-btn.primary:hover {
+      background: #333;
+    }
+
+    /* STATS */
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: #aaa;
+      font-size: 10px;
+    }
+
+    /* CONTENT */
+    .content-area {
+      margin: 8px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: var(--field-bezel);
+      min-height: 300px;
+      text-align: center;
+      color: #666;
+    }
+
+    /* Mobile: dialog becomes full screen */
+    @media (max-width: 600px) {
+      .dialog-overlay {
+        padding: 0;
+        align-items: stretch;
+      }
+
+      .dialog {
+        max-width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .dialog-body {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-bar {
+        flex-wrap: wrap;
+      }
+
+      .active-display {
+        order: 2;
+        width: 100%;
+        margin-top: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <button class="filters-btn" id="open-filters">
+      <span class="filter-icon">☰</span>
+      <span>Filters</span>
+      <span class="filter-count" id="filter-count"></span>
+    </button>
+
+    <div class="active-display" id="active-display">
+      <span class="no-filters-text">No filters selected</span>
+    </div>
+
+    <span class="clear-all-link" id="clear-all" style="display:none">Clear all</span>
+  </div>
+
+  <div class="stats-bar">
+    <span id="result-count">0 icons</span>
+    <span id="filter-desc">No filters</span>
+  </div>
+
+  <!-- DIALOG OVERLAY -->
+  <div class="dialog-overlay" id="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-title-bar">
+        <div class="dialog-close" id="dialog-close">×</div>
+        <span class="dialog-title">Filter Icons</span>
+        <div style="width:13px"></div>
+      </div>
+
+      <div class="dialog-body">
+        <!-- Category -->
+        <div class="filter-group">
+          <div class="group-header">
+            <span class="group-title">Category</span>
+            <span class="group-summary" id="category-summary">0 of 0</span>
+            <button class="group-clear" data-clear="category">Clear</button>
+          </div>
+          <div class="checkbox-scroll">
+            <div class="checkbox-grid" id="category-grid"></div>
+          </div>
+        </div>
+
+        <!-- Theme -->
+        <div class="filter-group">
+          <div class="group-header">
+            <span class="group-title">Theme</span>
+            <span class="group-summary" id="theme-summary">0 of 0</span>
+            <button class="group-clear" data-clear="theme">Clear</button>
+          </div>
+          <div class="checkbox-scroll">
+            <div class="checkbox-grid" id="theme-grid"></div>
+          </div>
+        </div>
+
+        <!-- Vibe -->
+        <div class="filter-group">
+          <div class="group-header">
+            <span class="group-title">Vibe</span>
+            <span class="group-summary" id="vibe-summary">0 of 0</span>
+            <button class="group-clear" data-clear="vibe">Clear</button>
+          </div>
+          <div class="checkbox-scroll">
+            <div class="checkbox-grid" id="vibe-grid"></div>
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div class="filter-group">
+          <div class="group-header">
+            <span class="group-title">Color</span>
+            <span class="group-summary" id="color-summary">0 of 0</span>
+            <button class="group-clear" data-clear="color">Clear</button>
+          </div>
+          <div class="color-scroll">
+            <div class="color-grid" id="color-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="dialog-btn" id="reset-btn">Reset All</button>
+        <button class="dialog-btn primary" id="done-btn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <p>[ Icon grid would appear here ]</p>
+  </div>
+
+  <script>
+    let tagsData = null;
+    let activeFilters = { category: new Set(), theme: new Set(), vibe: new Set(), color: new Set() };
+    let filterCounts = { category: 0, theme: 0, vibe: 0, color: 0 };
+
+    async function loadData() {
+      const res = await fetch('../public/tags.json');
+      tagsData = await res.json();
+      buildFilters();
+      updateUI();
+    }
+
+    function countValues(field, isArray = false) {
+      const counts = {};
+      tagsData.icons.forEach(icon => {
+        if (isArray) {
+          (icon[field] || []).forEach(val => {
+            if (val) counts[val] = (counts[val] || 0) + 1;
+          });
+        } else {
+          const val = icon[field];
+          if (val) counts[val] = (counts[val] || 0) + 1;
+        }
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function buildFilters() {
+      buildCheckboxGrid('category', 'category-grid', false);
+      buildCheckboxGrid('themes', 'theme-grid', true);
+      buildCheckboxGrid('vibes', 'vibe-grid', true);
+      buildColorGrid();
+    }
+
+    function buildCheckboxGrid(field, containerId, isArray) {
+      const values = countValues(field, isArray);
+      const container = document.getElementById(containerId);
+      container.replaceChildren();
+
+      const filterType = containerId.replace('-grid', '');
+      filterCounts[filterType] = values.length;
+
+      values.forEach(([val, count]) => {
+        const row = document.createElement('div');
+        row.className = 'checkbox-row';
+        row.dataset.value = val;
+        row.dataset.filter = filterType;
+
+        const box = document.createElement('span');
+        box.className = 'cb-box';
+
+        const label = document.createElement('span');
+        label.className = 'cb-label';
+        label.textContent = val;
+        label.title = val;
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'cb-count';
+        countSpan.textContent = '(' + count + ')';
+
+        row.appendChild(box);
+        row.appendChild(label);
+        row.appendChild(countSpan);
+        row.onclick = () => toggleFilter(filterType, val);
+        container.appendChild(row);
+      });
+    }
+
+    function buildColorGrid() {
+      const colors = countValues('colors', true);
+      const container = document.getElementById('color-grid');
+      container.replaceChildren();
+
+      filterCounts.color = colors.length;
+
+      colors.forEach(([val, count]) => {
+        const box = document.createElement('div');
+        box.className = 'color-box';
+        box.style.background = val;
+        box.title = val + ' (' + count + ')';
+        box.dataset.value = val;
+        box.onclick = () => toggleFilter('color', val);
+        container.appendChild(box);
+      });
+    }
+
+    function toggleFilter(type, value) {
+      if (activeFilters[type].has(value)) {
+        activeFilters[type].delete(value);
+      } else {
+        activeFilters[type].add(value);
+      }
+      updateUI();
+    }
+
+    function clearFilter(type) {
+      activeFilters[type].clear();
+      updateUI();
+    }
+
+    function clearAll() {
+      Object.keys(activeFilters).forEach(k => activeFilters[k].clear());
+      updateUI();
+    }
+
+    function openDialog() {
+      document.getElementById('dialog-overlay').classList.add('open');
+    }
+
+    function closeDialog() {
+      document.getElementById('dialog-overlay').classList.remove('open');
+    }
+
+    function updateUI() {
+      // Update checkbox states
+      document.querySelectorAll('.checkbox-row').forEach(row => {
+        const type = row.dataset.filter;
+        const val = row.dataset.value;
+        row.classList.toggle('checked', activeFilters[type].has(val));
+      });
+
+      // Update color states
+      document.querySelectorAll('.color-box').forEach(box => {
+        box.classList.toggle('checked', activeFilters.color.has(box.dataset.value));
+      });
+
+      // Update group summaries
+      ['category', 'theme', 'vibe', 'color'].forEach(type => {
+        const selected = activeFilters[type].size;
+        const total = filterCounts[type];
+        document.getElementById(type + '-summary').textContent = selected + ' of ' + total + ' selected';
+      });
+
+      // Update filter button
+      const totalActive = Object.values(activeFilters).reduce((sum, set) => sum + set.size, 0);
+      const filterBtn = document.getElementById('open-filters');
+      const filterCountSpan = document.getElementById('filter-count');
+
+      if (totalActive > 0) {
+        filterBtn.classList.add('has-filters');
+        filterCountSpan.textContent = '(' + totalActive + ')';
+      } else {
+        filterBtn.classList.remove('has-filters');
+        filterCountSpan.textContent = '';
+      }
+
+      // Update active display
+      const display = document.getElementById('active-display');
+      display.replaceChildren();
+
+      if (totalActive === 0) {
+        const noFilters = document.createElement('span');
+        noFilters.className = 'no-filters-text';
+        noFilters.textContent = 'No filters selected';
+        display.appendChild(noFilters);
+        document.getElementById('clear-all').style.display = 'none';
+      } else {
+        document.getElementById('clear-all').style.display = '';
+
+        ['category', 'theme', 'vibe', 'color'].forEach(type => {
+          activeFilters[type].forEach(val => {
+            const chip = document.createElement('span');
+            chip.className = 'filter-chip';
+
+            const typeLabel = document.createElement('span');
+            typeLabel.className = 'chip-type';
+            typeLabel.textContent = type.charAt(0) + ':';
+
+            const valText = document.createTextNode(val);
+
+            const remove = document.createElement('span');
+            remove.className = 'remove';
+            remove.textContent = '×';
+            remove.onclick = (e) => {
+              e.stopPropagation();
+              toggleFilter(type, val);
+            };
+
+            chip.appendChild(typeLabel);
+            chip.appendChild(valText);
+            chip.appendChild(remove);
+            display.appendChild(chip);
+          });
+        });
+      }
+
+      // Count filtered icons
+      const filtered = tagsData.icons.filter(icon => {
+        if (activeFilters.category.size && !activeFilters.category.has(icon.category)) return false;
+        if (activeFilters.theme.size && !(icon.themes || []).some(t => activeFilters.theme.has(t))) return false;
+        if (activeFilters.vibe.size && !(icon.vibes || []).some(v => activeFilters.vibe.has(v))) return false;
+        if (activeFilters.color.size && !(icon.colors || []).some(c => activeFilters.color.has(c))) return false;
+        return true;
+      });
+
+      document.getElementById('result-count').textContent = filtered.length + ' of ' + tagsData.icons.length + ' icons';
+      document.getElementById('filter-desc').textContent = totalActive ? totalActive + ' filters active' : 'No filters';
+    }
+
+    // Event listeners
+    document.getElementById('open-filters').onclick = openDialog;
+    document.getElementById('dialog-close').onclick = closeDialog;
+    document.getElementById('done-btn').onclick = closeDialog;
+    document.getElementById('reset-btn').onclick = clearAll;
+    document.getElementById('clear-all').onclick = clearAll;
+
+    document.getElementById('dialog-overlay').onclick = (e) => {
+      if (e.target === e.currentTarget) closeDialog();
+    };
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('group-clear')) {
+        clearFilter(e.target.dataset.clear);
+      }
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

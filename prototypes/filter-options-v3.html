@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter UX - Authentic Mac OS 8</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-image: url("../public/img/patterns/128.png");
+      background-repeat: repeat;
+      font-family: 'ChicagoFLF', Geneva, sans-serif;
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    /* ========================================
+       Mac OS 8 Platinum Base Styles
+       ======================================== */
+
+    /* Window */
+    .window {
+      background: #ccc;
+      border: 1px solid #000;
+      box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #888 inset;
+      margin-bottom: 24px;
+    }
+
+    .title-bar {
+      background: linear-gradient(to bottom, #ddd 0%, #bbb 100%);
+      border-bottom: 1px solid #888;
+      padding: 3px 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .title-bar-lines {
+      flex: 1;
+      height: 11px;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 1px,
+        #888 1px,
+        #888 2px,
+        transparent 2px,
+        transparent 3px
+      );
+      margin: 0 6px;
+    }
+
+    .title-bar h1 {
+      font-size: 12px;
+      font-weight: normal;
+      padding: 0 8px;
+      background: linear-gradient(to bottom, #ddd 0%, #bbb 100%);
+    }
+
+    .close-box {
+      width: 13px;
+      height: 11px;
+      border: 1px solid #000;
+      background: #ccc;
+      box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #888 inset;
+    }
+
+    .window-content {
+      padding: 10px;
+    }
+
+    /* Inset well/field */
+    .well {
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: -1px -1px 0 #fff, 1px 1px 0 #888, inset 1px 1px 0 #888;
+      padding: 6px;
+    }
+
+    /* Group box (like control panel sections) */
+    .group-box {
+      border: 1px solid #888;
+      padding: 12px 10px 10px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .group-box-label {
+      position: absolute;
+      top: -7px;
+      left: 8px;
+      background: #ccc;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+
+    /* ========================================
+       Authentic Mac OS 8 Controls
+       ======================================== */
+
+    /* Push button */
+    .button {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 3px 16px;
+      border: 1px solid #000;
+      border-radius: 4px;
+      background: linear-gradient(to bottom, #eee 0%, #ccc 45%, #bbb 55%, #ccc 100%);
+      box-shadow: 0 1px 0 #fff inset;
+      cursor: pointer;
+    }
+
+    .button:active {
+      background: linear-gradient(to bottom, #aaa 0%, #bbb 45%, #ccc 55%, #bbb 100%);
+      box-shadow: 0 1px 0 #888 inset;
+    }
+
+    /* Checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      padding: 2px 0;
+      cursor: pointer;
+    }
+
+    .checkbox-row:hover {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    .checkbox {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #888;
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .checkbox.checked::after {
+      content: '✓';
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    /* Radio button */
+    .radio-row {
+      display: flex;
+      align-items: center;
+      padding: 2px 0;
+      cursor: pointer;
+    }
+
+    .radio-row:hover {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    .radio {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #888;
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .radio.selected::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #000;
+      border-radius: 50%;
+    }
+
+    /* Popup menu (dropdown) */
+    .popup-menu {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 2px 20px 2px 6px;
+      min-width: 120px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset 1px 1px 0 #888, inset -1px -1px 0 #fff;
+      cursor: pointer;
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .popup-menu-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .popup-menu-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #000;
+      pointer-events: none;
+    }
+
+    /* Scrolling list */
+    .list-box {
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #888;
+      height: 120px;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      padding: 1px 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .list-item:hover {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    .list-item.selected {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    /* List scrollbar - Mac OS 8 style */
+    .list-box::-webkit-scrollbar {
+      width: 16px;
+    }
+
+    .list-box::-webkit-scrollbar-track {
+      background: #ccc;
+      border-left: 1px solid #888;
+    }
+
+    .list-box::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+    }
+
+    .list-box::-webkit-scrollbar-button:vertical:decrement {
+      height: 16px;
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path d="M4 2L1 6h6z" fill="%23000"/></svg>') center no-repeat;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+    }
+
+    .list-box::-webkit-scrollbar-button:vertical:increment {
+      height: 16px;
+      background: #ddd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path d="M4 6L1 2h6z" fill="%23000"/></svg>') center no-repeat;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+    }
+
+    /* ========================================
+       Icon palette (like Appearance control panel)
+       ======================================== */
+
+    .icon-palette {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #888;
+    }
+
+    .icon-palette-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 6px 2px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 9px;
+      min-width: 48px;
+    }
+
+    .icon-palette-item:hover {
+      background: #ddd;
+    }
+
+    .icon-palette-item.selected {
+      background: #3366cc;
+      color: #fff;
+    }
+
+    .icon-palette-item img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      margin-bottom: 2px;
+    }
+
+    .icon-palette-item.selected img {
+      /* Mac OS highlight inverts the icon */
+      filter: brightness(0) invert(1);
+    }
+
+    /* Color picker grid (like color control panel) */
+    .color-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(6, 16px);
+      gap: 1px;
+      padding: 3px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #888;
+    }
+
+    .color-cell {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #666;
+      cursor: pointer;
+    }
+
+    .color-cell:hover {
+      border-color: #000;
+      outline: 1px solid #000;
+    }
+
+    .color-cell.selected {
+      border: 2px solid #000;
+    }
+
+    /* ========================================
+       Layout helpers
+       ======================================== */
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .row > label {
+      min-width: 55px;
+      font-size: 12px;
+      text-align: right;
+      padding-top: 2px;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Status text */
+    .status-text {
+      font-size: 11px;
+      color: #333;
+      padding: 4px 0;
+    }
+
+    /* Separator */
+    hr {
+      border: none;
+      border-top: 1px solid #888;
+      border-bottom: 1px solid #fff;
+      margin: 10px 0;
+    }
+
+    /* Section label */
+    h2 {
+      font-size: 12px;
+      font-weight: normal;
+      background: #aaa;
+      color: #fff;
+      padding: 3px 6px;
+      margin: 20px 0 10px;
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    /* ========================================
+       Pagination
+       ======================================== */
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      background: #ccc;
+      border-top: 1px solid #888;
+    }
+
+    .pagination-arrow {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #000;
+      background: linear-gradient(to bottom, #eee 0%, #ccc 100%);
+      box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+
+    .pagination-arrow:active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 0 #888;
+    }
+
+    .pagination-arrow:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .pagination-text {
+      font-size: 10px;
+      padding: 0 8px;
+      min-width: 80px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Option A: Icon Palette + Scrolling Lists</h2>
+<div class="window">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <div class="title-bar-lines"></div>
+    <h1>Icon Archive</h1>
+    <div class="title-bar-lines"></div>
+  </div>
+  <div class="window-content">
+
+    <div class="row">
+      <label>Category:</label>
+      <div class="icon-palette">
+        <button class="icon-palette-item">
+          <img src="../public/icons/icons--toolbox.png" alt="">
+          <span>object</span>
+        </button>
+        <button class="icon-palette-item selected">
+          <img src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>character</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+          <span>symbol</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/classic-x--utilities.png" alt="">
+          <span>ui</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Theme:</label>
+      <div class="list-box" style="width: 140px;">
+        <div class="list-item selected">food (1627)</div>
+        <div class="list-item selected">japanese (729)</div>
+        <div class="list-item">hardware (1241)</div>
+        <div class="list-item">sports (708)</div>
+        <div class="list-item">scifi (730)</div>
+        <div class="list-item">christmas (471)</div>
+        <div class="list-item">animal (691)</div>
+        <div class="list-item">nature (603)</div>
+        <div class="list-item">fantasy (449)</div>
+        <div class="list-item">holiday (612)</div>
+        <div class="list-item">drink (494)</div>
+        <div class="list-item">vehicle (444)</div>
+        <div class="list-item">music (264)</div>
+        <div class="list-item">gaming (362)</div>
+        <div class="list-item">office (1220)</div>
+      </div>
+
+      <label>Vibe:</label>
+      <div class="list-box" style="width: 120px;">
+        <div class="list-item">technical (3108)</div>
+        <div class="list-item selected">playful (1884)</div>
+        <div class="list-item">retro (974)</div>
+        <div class="list-item">cozy (973)</div>
+        <div class="list-item">minimal (649)</div>
+        <div class="list-item">elegant (584)</div>
+        <div class="list-item">spooky (389)</div>
+        <div class="list-item">festive (384)</div>
+        <div class="list-item">quirky (338)</div>
+        <div class="list-item">heroic (263)</div>
+      </div>
+
+      <label>Color:</label>
+      <div class="color-grid">
+        <div class="color-cell" style="background: #ff0000;"></div>
+        <div class="color-cell selected" style="background: #ff8800;"></div>
+        <div class="color-cell" style="background: #ffff00;"></div>
+        <div class="color-cell" style="background: #00cc00;"></div>
+        <div class="color-cell" style="background: #0066ff;"></div>
+        <div class="color-cell" style="background: #9900ff;"></div>
+        <div class="color-cell" style="background: #ff66cc;"></div>
+        <div class="color-cell" style="background: #996633;"></div>
+        <div class="color-cell" style="background: #888888;"></div>
+        <div class="color-cell" style="background: #000000;"></div>
+        <div class="color-cell" style="background: #ffffff;"></div>
+        <div class="color-cell" style="background: #cccccc;"></div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="row" style="justify-content: space-between; align-items: center;">
+      <div class="status-text">Showing 1,892 of 7,394 icons</div>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+
+  <div class="pagination">
+    <button class="pagination-arrow">◀</button>
+    <span class="pagination-text">Page 1 of 4</span>
+    <button class="pagination-arrow">▶</button>
+  </div>
+</div>
+
+
+<h2>Option B: Popup Menus</h2>
+<div class="window">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <div class="title-bar-lines"></div>
+    <h1>Icon Archive</h1>
+    <div class="title-bar-lines"></div>
+  </div>
+  <div class="window-content">
+
+    <div class="row">
+      <label>Category:</label>
+      <div class="popup-menu-wrapper">
+        <select class="popup-menu">
+          <option>All Categories</option>
+          <option>object (3241)</option>
+          <option selected>character (1892)</option>
+          <option>symbol (845)</option>
+          <option>ui (1102)</option>
+          <option>text (314)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Theme:</label>
+      <div class="popup-menu-wrapper">
+        <select class="popup-menu">
+          <option>All Themes</option>
+          <option selected>food (1627)</option>
+          <option>hardware (1241)</option>
+          <option>japanese (729)</option>
+          <option>sports (708)</option>
+          <option>scifi (730)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Vibe:</label>
+      <div class="popup-menu-wrapper">
+        <select class="popup-menu">
+          <option>All Vibes</option>
+          <option>technical (3108)</option>
+          <option selected>playful (1884)</option>
+          <option>retro (974)</option>
+          <option>cozy (973)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Color:</label>
+      <div class="color-grid">
+        <div class="color-cell" style="background: #ff0000;"></div>
+        <div class="color-cell" style="background: #ff8800;"></div>
+        <div class="color-cell" style="background: #ffff00;"></div>
+        <div class="color-cell" style="background: #00cc00;"></div>
+        <div class="color-cell" style="background: #0066ff;"></div>
+        <div class="color-cell" style="background: #9900ff;"></div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="row" style="justify-content: space-between; align-items: center;">
+      <div class="status-text">Showing 1,892 of 7,394 icons</div>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option C: Checkbox Lists (Multi-select)</h2>
+<div class="window">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <div class="title-bar-lines"></div>
+    <h1>Icon Archive</h1>
+    <div class="title-bar-lines"></div>
+  </div>
+  <div class="window-content">
+
+    <div style="display: flex; gap: 16px;">
+
+      <div class="group-box" style="flex: 0 0 auto;">
+        <span class="group-box-label">Category</span>
+        <div class="radio-row"><span class="radio"></span> All</div>
+        <div class="radio-row"><span class="radio"></span> object (3241)</div>
+        <div class="radio-row"><span class="radio selected"></span> character (1892)</div>
+        <div class="radio-row"><span class="radio"></span> symbol (845)</div>
+        <div class="radio-row"><span class="radio"></span> ui (1102)</div>
+        <div class="radio-row"><span class="radio"></span> text (314)</div>
+      </div>
+
+      <div class="group-box" style="flex: 1; max-width: 160px;">
+        <span class="group-box-label">Theme</span>
+        <div style="max-height: 100px; overflow-y: auto;">
+          <div class="checkbox-row"><span class="checkbox checked"></span> food (1627)</div>
+          <div class="checkbox-row"><span class="checkbox checked"></span> japanese (729)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> hardware (1241)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> sports (708)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> scifi (730)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> christmas (471)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> animal (691)</div>
+          <div class="checkbox-row"><span class="checkbox"></span> nature (603)</div>
+        </div>
+      </div>
+
+      <div class="group-box" style="flex: 1; max-width: 140px;">
+        <span class="group-box-label">Vibe</span>
+        <div style="max-height: 100px; overflow-y: auto;">
+          <div class="checkbox-row"><span class="checkbox"></span> technical</div>
+          <div class="checkbox-row"><span class="checkbox checked"></span> playful</div>
+          <div class="checkbox-row"><span class="checkbox"></span> retro</div>
+          <div class="checkbox-row"><span class="checkbox"></span> cozy</div>
+          <div class="checkbox-row"><span class="checkbox"></span> minimal</div>
+          <div class="checkbox-row"><span class="checkbox"></span> elegant</div>
+        </div>
+      </div>
+
+      <div class="group-box" style="flex: 0 0 auto;">
+        <span class="group-box-label">Color</span>
+        <div class="color-grid" style="grid-template-columns: repeat(4, 16px);">
+          <div class="color-cell" style="background: #ff0000;"></div>
+          <div class="color-cell selected" style="background: #ff8800;"></div>
+          <div class="color-cell" style="background: #ffff00;"></div>
+          <div class="color-cell" style="background: #00cc00;"></div>
+          <div class="color-cell" style="background: #0066ff;"></div>
+          <div class="color-cell" style="background: #9900ff;"></div>
+          <div class="color-cell" style="background: #888888;"></div>
+          <div class="color-cell" style="background: #000000;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <div class="row" style="justify-content: space-between; align-items: center;">
+      <div class="status-text">Showing: character + food + japanese + playful + orange (847 icons)</div>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option D: Compact with Icon Palette</h2>
+<div class="window" style="max-width: 600px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <div class="title-bar-lines"></div>
+    <h1>Icon Archive</h1>
+    <div class="title-bar-lines"></div>
+  </div>
+  <div class="window-content">
+
+    <div style="display: flex; gap: 12px; align-items: flex-start;">
+
+      <!-- Category icon palette -->
+      <div class="icon-palette" style="flex-wrap: wrap; width: 110px;">
+        <button class="icon-palette-item">
+          <img src="../public/icons/icons--toolbox.png" alt="">
+          <span>object</span>
+        </button>
+        <button class="icon-palette-item selected">
+          <img src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>character</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+          <span>symbol</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/classic-x--utilities.png" alt="">
+          <span>ui</span>
+        </button>
+        <button class="icon-palette-item">
+          <img src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </button>
+      </div>
+
+      <!-- Popup menus for theme/vibe -->
+      <div class="col" style="flex: 1;">
+        <div class="row" style="margin-bottom: 6px;">
+          <label style="min-width: 45px;">Theme:</label>
+          <div class="popup-menu-wrapper">
+            <select class="popup-menu" style="width: 140px;">
+              <option>All</option>
+              <option selected>food (1627)</option>
+              <option>hardware</option>
+              <option>japanese</option>
+              <option>sports</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-bottom: 6px;">
+          <label style="min-width: 45px;">Vibe:</label>
+          <div class="popup-menu-wrapper">
+            <select class="popup-menu" style="width: 140px;">
+              <option>All</option>
+              <option>technical</option>
+              <option selected>playful</option>
+              <option>retro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label style="min-width: 45px;">Color:</label>
+          <div class="color-grid" style="grid-template-columns: repeat(6, 14px);">
+            <div class="color-cell" style="width:14px;height:14px;background:#f00;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#f80;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#ff0;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#0c0;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#06f;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#90f;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#f6c;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#963;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#888;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#000;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#fff;"></div>
+            <div class="color-cell" style="width:14px;height:14px;background:#ccc;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="status-text">847 of 7,394 icons</div>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+
+  <div class="pagination">
+    <button class="pagination-arrow">◀</button>
+    <span class="pagination-text">Page 1 of 2</span>
+    <button class="pagination-arrow">▶</button>
+  </div>
+</div>
+
+
+<h2>Pagination (Always Visible)</h2>
+<div class="window" style="max-width: 400px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <div class="title-bar-lines"></div>
+    <h1>Pagination</h1>
+    <div class="title-bar-lines"></div>
+  </div>
+  <div class="window-content">
+    <div class="col" style="gap: 12px;">
+
+      <div>
+        <div class="status-text" style="margin-bottom: 4px;">Single page:</div>
+        <div class="pagination" style="display: inline-flex; background: #ccc; border: 1px solid #888;">
+          <button class="pagination-arrow" disabled>◀</button>
+          <span class="pagination-text">Page 1 of 1</span>
+          <button class="pagination-arrow" disabled>▶</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="status-text" style="margin-bottom: 4px;">Multi-page:</div>
+        <div class="pagination" style="display: inline-flex; background: #ccc; border: 1px solid #888;">
+          <button class="pagination-arrow">◀</button>
+          <span class="pagination-text">Page 3 of 15</span>
+          <button class="pagination-arrow">▶</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

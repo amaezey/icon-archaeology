@@ -4,21 +4,26 @@
 
 A creative project extracting and showcasing classic Mac OS icons from resource forks.
 
-**Spin-off from:** inspo-space (files remain shared in `../Inspo space/`)
-
 ## Directory Structure
 
 ```
-icon-archaeology/           <- This project (own git repo)
+icon-archaeology/
+├── sources/                <- Original icon collections (resource forks)
+│   ├── ALIVE/
+│   ├── creativejuices/
+│   ├── edibles/
+│   ├── geometria_tech/
+│   ├── huh/
+│   ├── Icon Collection/
+│   ├── Icon Collection 1/
+│   ├── interfacials/
+│   ├── junk drawer/
+│   └── retroish/
+├── public/
+│   └── icons/              <- Extracted PNGs (transparent)
 ├── scripts/                <- Python extraction tools
 ├── gallery/                <- Browsable icon gallery
 └── docs/                   <- Technical documentation
-
-../Inspo space/             <- Parent project (shared files)
-├── Media/Icons/            <- Original icon collections (source)
-└── public/icons/           <- Extracted PNGs (output)
-    ├── extracted/          <- With white backgrounds
-    └── extracted-transparent/  <- With transparency
 ```
 
 ## Key Technical Details

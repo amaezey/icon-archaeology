@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter UX - Mac OS 8</title>
+  <style>
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('../public/fonts/ChicagoFLF.ttf') format('truetype');
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      /* Mac OS 8 purple-gray desktop pattern */
+      background: #9999cc;
+      font-family: 'ChicagoFLF', 'Charcoal', Geneva, sans-serif;
+      font-size: 12px;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    /* ========================================
+       Mac OS 8 Platinum Window
+       ======================================== */
+
+    .window {
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow:
+        inset 1px 1px 0 #fff,
+        inset -1px -1px 0 #888;
+      margin-bottom: 20px;
+    }
+
+    .title-bar {
+      height: 20px;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          #dddddd 0px,
+          #dddddd 1px,
+          #aaaaaa 1px,
+          #aaaaaa 2px
+        );
+      border-bottom: 1px solid #888;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      position: relative;
+    }
+
+    .close-box {
+      width: 13px;
+      height: 11px;
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow:
+        inset 1px 1px 0 #fff,
+        inset -1px -1px 0 #888;
+      flex-shrink: 0;
+    }
+
+    .title-bar h1 {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: normal;
+      background: #dddddd;
+      padding: 0 8px;
+      white-space: nowrap;
+    }
+
+    .window-content {
+      padding: 12px;
+    }
+
+    /* ========================================
+       Mac OS 8 Controls
+       ======================================== */
+
+    /* Push button */
+    .button {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 2px 16px;
+      border: 1px solid #000;
+      border-radius: 4px;
+      background: #dddddd;
+      box-shadow:
+        inset 1px 1px 0 #fff,
+        inset -1px -1px 0 #888;
+      cursor: pointer;
+    }
+
+    .button:active {
+      background: #bbbbbb;
+      box-shadow:
+        inset 1px 1px 0 #888,
+        inset -1px -1px 0 #fff;
+    }
+
+    /* Checkbox */
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 1px 0;
+      cursor: pointer;
+    }
+
+    .checkbox-box {
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #888;
+      margin-right: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .checkbox-item.checked .checkbox-box::after {
+      content: '✓';
+    }
+
+    /* Radio button */
+    .radio-item {
+      display: flex;
+      align-items: center;
+      padding: 1px 0;
+      cursor: pointer;
+    }
+
+    .radio-circle {
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border: 1px solid #000;
+      border-radius: 50%;
+      box-shadow: inset 1px 1px 0 #888;
+      margin-right: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .radio-item.selected .radio-circle::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #000;
+      border-radius: 50%;
+    }
+
+    /* Inset field/well */
+    .well {
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    /* ========================================
+       Launcher-style Category Tabs + Icons
+       (Based on Mac OS 8 Launcher)
+       ======================================== */
+
+    .launcher {
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow:
+        inset 1px 1px 0 #fff,
+        inset -1px -1px 0 #888;
+    }
+
+    .launcher-tabs {
+      display: flex;
+      border-bottom: 1px solid #888;
+    }
+
+    .launcher-tab {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 3px 12px;
+      background: #bbbbbb;
+      border: none;
+      border-right: 1px solid #888;
+      cursor: pointer;
+    }
+
+    .launcher-tab:hover {
+      background: #cccccc;
+    }
+
+    .launcher-tab.selected {
+      background: #dddddd;
+      font-weight: bold;
+    }
+
+    .launcher-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 4px;
+      padding: 8px;
+      background: #fff;
+      margin: 4px;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .launcher-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 9px;
+      text-align: center;
+    }
+
+    .launcher-item img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      margin-bottom: 2px;
+    }
+
+    .launcher-item span {
+      padding: 1px 2px;
+    }
+
+    /* Selection: dark rectangle behind text only */
+    .launcher-item.selected span {
+      background: #333366;
+      color: #fff;
+    }
+
+    /* ========================================
+       Scrolling List (like Finder list view)
+       ======================================== */
+
+    .list-box {
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      padding: 1px 4px;
+      cursor: pointer;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* Selection: dark purple-navy background */
+    .list-item.selected {
+      background: #333366;
+      color: #fff;
+    }
+
+    /* Scrollbar */
+    .list-box::-webkit-scrollbar {
+      width: 16px;
+    }
+
+    .list-box::-webkit-scrollbar-track {
+      background: #dddddd;
+      border-left: 1px solid #888;
+    }
+
+    .list-box::-webkit-scrollbar-thumb {
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+    }
+
+    .list-box::-webkit-scrollbar-button {
+      height: 16px;
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+    }
+
+    .list-box::-webkit-scrollbar-button:vertical:decrement {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M4 0L0 4h8z" fill="%23000"/></svg>');
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .list-box::-webkit-scrollbar-button:vertical:increment {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M4 4L0 0h8z" fill="%23000"/></svg>');
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* ========================================
+       Color Grid (like color picker)
+       ======================================== */
+
+    .color-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(6, 14px);
+      gap: 1px;
+      padding: 3px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .color-cell {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #666;
+      cursor: pointer;
+    }
+
+    .color-cell.selected {
+      border: 2px solid #000;
+    }
+
+    /* ========================================
+       Popup Menu (dropdown)
+       ======================================== */
+
+    .popup {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 1px 18px 1px 4px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4"><path d="M4 4L0 0h8z" fill="%23000"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 4px center;
+    }
+
+    /* ========================================
+       Tabs (like Claris Emailer)
+       ======================================== */
+
+    .tabs {
+      display: flex;
+    }
+
+    .tab {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 3px 14px;
+      background: #bbbbbb;
+      border: 1px solid #888;
+      border-bottom: none;
+      margin-right: -1px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tab.selected {
+      background: #fff;
+      border-bottom: 1px solid #fff;
+      z-index: 1;
+    }
+
+    .tab-content {
+      background: #fff;
+      border: 1px solid #888;
+      padding: 8px;
+      margin-top: -1px;
+    }
+
+    /* ========================================
+       Layout
+       ======================================== */
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .row > label {
+      min-width: 50px;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #888;
+      border-bottom: 1px solid #fff;
+      margin: 10px 0;
+    }
+
+    .status {
+      font-size: 11px;
+    }
+
+    /* ========================================
+       Pagination
+       ======================================== */
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      background: #dddddd;
+      border-top: 1px solid #fff;
+    }
+
+    .page-btn {
+      width: 16px;
+      height: 14px;
+      background: #dddddd;
+      border: 1px solid #000;
+      box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
+      cursor: pointer;
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:active {
+      background: #bbbbbb;
+      box-shadow: inset 1px 1px 0 #888;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .page-text {
+      font-size: 10px;
+      padding: 0 8px;
+    }
+
+    /* Section headers */
+    h2 {
+      font-size: 12px;
+      font-weight: normal;
+      color: #fff;
+      background: #666699;
+      padding: 2px 6px;
+      margin: 16px 0 8px;
+    }
+    h2:first-of-type { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<h2>Option A: Launcher-style Categories + Lists</h2>
+<div class="window">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Icon Archive</h1>
+  </div>
+  <div class="window-content">
+
+    <div class="row">
+      <label>Category:</label>
+      <div class="launcher" style="width: 240px;">
+        <div class="launcher-grid" style="grid-template-columns: repeat(5, 1fr);">
+          <button class="launcher-item">
+            <img src="../public/icons/icons--toolbox.png" alt="">
+            <span>object</span>
+          </button>
+          <button class="launcher-item selected">
+            <img src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+            <span>character</span>
+          </button>
+          <button class="launcher-item">
+            <img src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+            <span>symbol</span>
+          </button>
+          <button class="launcher-item">
+            <img src="../public/icons/classic-x--utilities.png" alt="">
+            <span>ui</span>
+          </button>
+          <button class="launcher-item">
+            <img src="../public/icons/classic-x--text.png" alt="">
+            <span>text</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Theme:</label>
+      <div class="list-box" style="width: 130px; height: 100px;">
+        <div class="list-item selected">food (1627)</div>
+        <div class="list-item selected">japanese (729)</div>
+        <div class="list-item">hardware (1241)</div>
+        <div class="list-item">sports (708)</div>
+        <div class="list-item">scifi (730)</div>
+        <div class="list-item">christmas (471)</div>
+        <div class="list-item">animal (691)</div>
+        <div class="list-item">nature (603)</div>
+        <div class="list-item">fantasy (449)</div>
+        <div class="list-item">holiday (612)</div>
+      </div>
+
+      <label>Vibe:</label>
+      <div class="list-box" style="width: 120px; height: 100px;">
+        <div class="list-item">technical (3108)</div>
+        <div class="list-item selected">playful (1884)</div>
+        <div class="list-item">retro (974)</div>
+        <div class="list-item">cozy (973)</div>
+        <div class="list-item">minimal (649)</div>
+        <div class="list-item">elegant (584)</div>
+        <div class="list-item">spooky (389)</div>
+        <div class="list-item">festive (384)</div>
+      </div>
+
+      <label>Color:</label>
+      <div class="color-grid">
+        <div class="color-cell" style="background:#ff0000;"></div>
+        <div class="color-cell selected" style="background:#ff8800;"></div>
+        <div class="color-cell" style="background:#ffff00;"></div>
+        <div class="color-cell" style="background:#00cc00;"></div>
+        <div class="color-cell" style="background:#0066ff;"></div>
+        <div class="color-cell" style="background:#9900ff;"></div>
+        <div class="color-cell" style="background:#ff66cc;"></div>
+        <div class="color-cell" style="background:#996633;"></div>
+        <div class="color-cell" style="background:#888888;"></div>
+        <div class="color-cell" style="background:#000000;"></div>
+        <div class="color-cell" style="background:#ffffff;"></div>
+        <div class="color-cell" style="background:#cccccc;"></div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">847 of 7,394 icons</span>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+
+  <div class="pagination">
+    <button class="page-btn">◀</button>
+    <span class="page-text">Page 1 of 2</span>
+    <button class="page-btn">▶</button>
+  </div>
+</div>
+
+
+<h2>Option B: Launcher with Category Tabs</h2>
+<div class="window">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Icon Archive</h1>
+  </div>
+  <div class="window-content">
+
+    <div class="launcher">
+      <div class="launcher-tabs">
+        <button class="launcher-tab">All</button>
+        <button class="launcher-tab">object</button>
+        <button class="launcher-tab selected">character</button>
+        <button class="launcher-tab">symbol</button>
+        <button class="launcher-tab">ui</button>
+        <button class="launcher-tab">text</button>
+      </div>
+      <div class="launcher-grid">
+        <div class="launcher-item">
+          <img src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>smiley</span>
+        </div>
+        <div class="launcher-item selected">
+          <img src="../public/icons/icons--toolbox.png" alt="">
+          <span>toolbox</span>
+        </div>
+        <div class="launcher-item">
+          <img src="../public/icons/classic-x--utilities.png" alt="">
+          <span>utilities</span>
+        </div>
+        <div class="launcher-item">
+          <img src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <label>Theme:</label>
+      <select class="popup" style="width: 130px;">
+        <option>All Themes</option>
+        <option selected>food (1627)</option>
+        <option>hardware (1241)</option>
+        <option>japanese (729)</option>
+      </select>
+
+      <label>Vibe:</label>
+      <select class="popup" style="width: 120px;">
+        <option>All Vibes</option>
+        <option selected>playful (1884)</option>
+        <option>technical (3108)</option>
+        <option>retro (974)</option>
+      </select>
+
+      <label>Color:</label>
+      <div class="color-grid" style="grid-template-columns: repeat(4, 14px);">
+        <div class="color-cell" style="background:#f00;"></div>
+        <div class="color-cell" style="background:#f80;"></div>
+        <div class="color-cell" style="background:#ff0;"></div>
+        <div class="color-cell" style="background:#0c0;"></div>
+        <div class="color-cell" style="background:#06f;"></div>
+        <div class="color-cell" style="background:#90f;"></div>
+        <div class="color-cell" style="background:#888;"></div>
+        <div class="color-cell" style="background:#000;"></div>
+      </div>
+    </div>
+
+    <hr>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">1,892 of 7,394 icons</span>
+      <button class="button">Clear All</button>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option C: View Options Style (Checkboxes/Radios)</h2>
+<div class="window" style="max-width: 400px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>View Options</h1>
+  </div>
+  <div class="window-content">
+
+    <div style="display: flex; gap: 20px;">
+
+      <div>
+        <div class="section-label">Category:</div>
+        <div class="radio-item"><span class="radio-circle"></span> All</div>
+        <div class="radio-item"><span class="radio-circle"></span> object</div>
+        <div class="radio-item selected"><span class="radio-circle"></span> character</div>
+        <div class="radio-item"><span class="radio-circle"></span> symbol</div>
+        <div class="radio-item"><span class="radio-circle"></span> ui</div>
+        <div class="radio-item"><span class="radio-circle"></span> text</div>
+      </div>
+
+      <div>
+        <div class="section-label">Show Themes:</div>
+        <div class="checkbox-item checked"><span class="checkbox-box"></span> food</div>
+        <div class="checkbox-item checked"><span class="checkbox-box"></span> japanese</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> hardware</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> sports</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> scifi</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> christmas</div>
+      </div>
+
+      <div>
+        <div class="section-label">Vibe:</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> technical</div>
+        <div class="checkbox-item checked"><span class="checkbox-box"></span> playful</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> retro</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> cozy</div>
+        <div class="checkbox-item"><span class="checkbox-box"></span> minimal</div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button class="button">Clear All</button>
+      <button class="button">OK</button>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Option D: Tabbed Filter Panel (Emailer-style)</h2>
+<div class="window" style="max-width: 360px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Filters</h1>
+  </div>
+  <div class="window-content" style="padding: 8px 8px 12px;">
+
+    <div class="tabs">
+      <div class="tab selected">Category</div>
+      <div class="tab">Theme</div>
+      <div class="tab">Vibe</div>
+      <div class="tab">Color</div>
+    </div>
+    <div class="tab-content">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="launcher-item">
+          <img src="../public/icons/icons--toolbox.png" alt="">
+          <span>object</span>
+        </div>
+        <div class="launcher-item selected">
+          <img src="../public/icons/3d-licious-vol--2--icon-sketchpad--smiley-face.png" alt="">
+          <span>character</span>
+        </div>
+        <div class="launcher-item">
+          <img src="../public/icons/a-long-time-ago--galactic-republic-symbol.png" alt="">
+          <span>symbol</span>
+        </div>
+        <div class="launcher-item">
+          <img src="../public/icons/classic-x--utilities.png" alt="">
+          <span>ui</span>
+        </div>
+        <div class="launcher-item">
+          <img src="../public/icons/classic-x--text.png" alt="">
+          <span>text</span>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="status">character selected</span>
+      <button class="button">Clear</button>
+    </div>
+
+  </div>
+</div>
+
+
+<h2>Pagination (Always Visible)</h2>
+<div class="window" style="max-width: 300px;">
+  <div class="title-bar">
+    <div class="close-box"></div>
+    <h1>Pagination</h1>
+  </div>
+  <div class="window-content">
+
+    <div class="status" style="margin-bottom: 8px;">Single page:</div>
+    <div class="pagination" style="display: inline-flex; border: 1px solid #888;">
+      <button class="page-btn" disabled>◀</button>
+      <span class="page-text">Page 1 of 1</span>
+      <button class="page-btn" disabled>▶</button>
+    </div>
+
+    <div class="status" style="margin: 12px 0 8px;">Multiple pages:</div>
+    <div class="pagination" style="display: inline-flex; border: 1px solid #888;">
+      <button class="page-btn">◀</button>
+      <span class="page-text">Page 3 of 15</span>
+      <button class="page-btn">▶</button>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
