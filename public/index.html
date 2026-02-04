@@ -201,22 +201,6 @@
       opacity: 0.4;
     }
 
-    .clear-btn {
-      font-family: inherit;
-      font-size: 11px;
-      padding: 8px 12px;
-      align-self: stretch;
-      border: 1px solid #000;
-      background: #ddd;
-      box-shadow: var(--button-bezel);
-      cursor: pointer;
-    }
-
-    .clear-btn:active {
-      background: #bbb;
-      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
-    }
-
     .sort-label {
       font-size: 11px;
     }
@@ -264,6 +248,27 @@
       color: #fff;
     }
 
+    .reset-btn {
+      font-family: inherit;
+      font-size: 11px;
+      padding: 0 8px;
+      height: 20px;
+      line-height: 18px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      background: #eee;
+    }
+
+    .reset-btn:active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
+    }
+
     /* Category icon palette */
     .category-palette {
       display: flex;
@@ -303,6 +308,74 @@
     .category-btn.active .label {
       background: #000;
       color: #fff;
+    }
+
+    /* Random dice tray */
+    .random-tray {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .dice-btn {
+      width: 40px;
+      height: 40px;
+      padding: 4px;
+      border: 1px solid #000;
+      background: #ddd;
+      box-shadow: var(--button-bezel);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dice-btn:hover {
+      background: #eee;
+    }
+
+    .dice-btn:active {
+      background: #bbb;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .dice-btn img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .dice-results {
+      display: none;
+      gap: 2px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid #888;
+      box-shadow: inset 1px 1px 0 #666;
+    }
+
+    .dice-results.has-icons {
+      display: flex;
+    }
+
+    .dice-slot {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .dice-slot:hover {
+      background: #f0f0f0;
+    }
+
+    .dice-slot img {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
     }
 
     .pagination {
@@ -471,6 +544,32 @@
     #detail .title-bar {
       padding: 2px 4px;
       cursor: default;
+      position: relative;
+    }
+
+    #detail .close-btn {
+      position: absolute;
+      right: 4px;
+      top: 2px;
+      width: 13px;
+      height: 13px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -1px -1px 0 #999, inset 1px 1px 0 #fff;
+      font-size: 12px;
+      line-height: 10px;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    #detail .close-btn:hover {
+      background: #eee;
+    }
+
+    #detail .close-btn:active {
+      background: #ccc;
+      box-shadow: inset 1px 1px 0 #999;
     }
 
     #detail .detail-content {
@@ -618,6 +717,38 @@
         height: 24px;
       }
 
+      .random-tray {
+        margin-left: 4px;
+      }
+
+      .dice-btn {
+        width: 32px;
+        height: 32px;
+        padding: 2px;
+      }
+
+      .dice-btn img {
+        width: 24px;
+        height: 24px;
+      }
+
+      .dice-slot {
+        width: 32px;
+        height: 32px;
+      }
+
+      .dice-slot img {
+        width: 24px;
+        height: 24px;
+      }
+
+      .reset-btn {
+        font-size: 10px;
+        padding: 0 6px;
+        height: 18px;
+        line-height: 16px;
+      }
+
       .filters {
         gap: 4px;
         margin-bottom: 4px;
@@ -726,14 +857,16 @@
         <input type="text" id="search" placeholder="Search...">
         <span class="sort-label">Sort:</span>
         <div class="custom-select" id="sort-select">
-          <div class="select-selected">A–Z</div>
+          <div class="select-selected">Relevance</div>
           <div class="select-items">
+            <div data-value="relevance">Relevance</div>
             <div data-value="name-asc">A–Z</div>
             <div data-value="name-desc">Z–A</div>
             <div data-value="newest">Newest</div>
             <div data-value="oldest">Oldest</div>
           </div>
         </div>
+        <button class="reset-btn" id="clear-filters">Reset Filters</button>
         <div class="stats">
           <span id="count">0</span> / <span id="total">0</span> icons
         </div>
@@ -741,7 +874,12 @@
       <div class="filters">
         <span class="filter-label">Category:</span>
         <div class="category-palette" id="category-filters"></div>
-        <button class="clear-btn" id="clear-filters">Reset Filters</button>
+        <div class="random-tray">
+          <button class="dice-btn" id="dice-btn" title="Random icons">
+            <img src="icons/junk-drawer--white-die.png" alt="Roll">
+          </button>
+          <div class="dice-results" id="dice-results"></div>
+        </div>
       </div>
       <div class="filters">
         <span class="filter-label">Tags:</span>
@@ -768,6 +906,7 @@
   <div id="detail">
     <div class="title-bar">
       <h1>Info</h1>
+      <button class="close-btn" id="detail-close" title="Close">×</button>
     </div>
     <div class="detail-content">
       <img src="" alt="">
@@ -798,12 +937,15 @@
 
     // Category icons mapping
     const CATEGORY_ICONS = {
-      'object': 'icons/afternoon-tea---sweets--short-cake-1.png',
-      'character': 'icons/alive--bunny.png',
-      'symbol': 'icons/heart---16455.png',
-      'ui': 'icons/-regis-millenium--finder.png',
-      'text': 'icons/classic-x--text.png'
+      'character': 'icons/animaniacs-by-jane-dominguez--rita.png',
+      'food': 'icons/good-icons--sushi.png',
+      'hardware': 'icons/mac-classic---16455.png',
+      'object': 'icons/wearing-o--the-green---16455.png',
+      'symbol': 'icons/-old-style--blueberry-folder---16455.png',
     };
+
+    // No special theme filters needed anymore - all are real categories
+    const THEME_FILTERS = [];
 
     function countValues(field, isArray = false, minCount = 1) {
       const counts = {};
@@ -845,7 +987,7 @@
       const container = document.getElementById('category-filters');
       container.replaceChildren();
 
-      const categories = ['object', 'character', 'symbol', 'ui', 'text'];
+      const categories = ['character', 'food', 'hardware', 'object', 'symbol'];
 
       categories.forEach(cat => {
         const btn = document.createElement('button');
@@ -1115,7 +1257,7 @@
       detail.classList.add('visible');
     }
 
-    let currentSort = 'name-asc';
+    let currentSort = 'relevance';
 
     function sortIcons(icons) {
       const sortBy = currentSort;
@@ -1235,8 +1377,41 @@
         return true;
       });
 
-      // Sort
-      filtered = sortIcons(filtered);
+      // Sort by relevance if searching or if relevance sort selected
+      if (search && (currentSort === 'relevance' || currentSort === 'name-asc')) {
+        filtered = filtered.map(icon => {
+          let score = 0;
+          const name = (icon.display_name || '').toLowerCase();
+          const desc = (icon.description || '').toLowerCase();
+          const collection = (icon.collection || '').toLowerCase();
+          const path = (icon.path || []).join(' ').toLowerCase();
+          const themes = (icon.themes || icon.secondary || []).join(' ').toLowerCase();
+
+          // Exact name match = highest
+          if (name === search) score += 100;
+          // Name starts with search
+          else if (name.startsWith(search)) score += 80;
+          // Name contains search
+          else if (name.includes(search)) score += 60;
+          // Description contains search
+          if (desc.includes(search)) score += 40;
+          // Collection/folder contains search
+          if (collection.includes(search)) score += 30;
+          if (path.includes(search)) score += 25;
+          // Theme/tag contains search
+          if (themes.includes(search)) score += 20;
+
+          return { icon, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .map(item => item.icon);
+      } else if (currentSort === 'relevance') {
+        // No search term, relevance = default order (no sorting)
+        // Keep original order
+      } else {
+        // Sort by selected option
+        filtered = sortIcons(filtered);
+      }
 
       // Pagination
       const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -1264,6 +1439,42 @@
 
     document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
     document.getElementById('clear-filters').addEventListener('click', clearFilters);
+    document.getElementById('detail-close').addEventListener('click', () => {
+      document.getElementById('detail').classList.remove('visible');
+      document.querySelectorAll('.icon.selected').forEach(el => el.classList.remove('selected'));
+    });
+
+    // Random dice feature
+    let diceIcons = []; // Store the current random icons
+    document.getElementById('dice-btn').addEventListener('click', rollDice);
+
+    function rollDice() {
+      if (!tagsData || tagsData.icons.length < 3) return;
+
+      // Pick 3 random icons from ALL icons (not just filtered)
+      const shuffled = [...tagsData.icons].sort(() => Math.random() - 0.5);
+      diceIcons = shuffled.slice(0, 3);
+
+      // Build the slots
+      const container = document.getElementById('dice-results');
+      container.replaceChildren();
+      container.classList.add('has-icons');
+
+      diceIcons.forEach((icon) => {
+        const slot = document.createElement('div');
+        slot.className = 'dice-slot';
+
+        const img = document.createElement('img');
+        img.src = ICONS_BASE + '/' + icon.file;
+        img.alt = getDisplayName(icon);
+        img.title = getDisplayName(icon);
+        slot.appendChild(img);
+
+        // Make slot clickable to show detail
+        slot.onclick = () => showDetail(icon, null);
+        container.appendChild(slot);
+      });
+    }
 
     // Custom sort dropdown
     const sortSelect = document.getElementById('sort-select');
