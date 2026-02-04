@@ -16,8 +16,11 @@ import re
 from pathlib import Path
 from collections import Counter
 
-TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/public/tags.json")
-OUTPUT_FILE = Path("/Users/mae/Documents/icon-archaeology/public/tags-enriched.json")
+# Paths relative to script location
+SCRIPT_DIR = Path(__file__).parent
+PROJECT_DIR = SCRIPT_DIR.parent
+TAGS_FILE = PROJECT_DIR / "public" / "tags.json"
+OUTPUT_FILE = PROJECT_DIR / "public" / "tags-enriched.json"
 
 # Collection name patterns → themes
 # Format: substring in collection name → list of themes to add
