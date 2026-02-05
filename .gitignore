@@ -1,2 +1,5 @@
 *.log
 .DS_Store
+
+# Intermediate processing files (keep only tags.json)
+public/tags-*.json
