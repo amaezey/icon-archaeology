@@ -924,6 +924,7 @@
   <script>
     const ICONS_BASE = 'icons';
     const TAGS_FILE = 'tags.json';
+    function iconUrl(file) { return ICONS_BASE + '/' + encodeURIComponent(file); }
 
     let tagsData = null;
     // Multi-select: Sets for categories, tags, colors
@@ -1208,7 +1209,7 @@
       div.className = 'icon';
 
       const img = document.createElement('img');
-      img.src = ICONS_BASE + '/' + icon.file;
+      img.src = iconUrl(icon.file);
       img.alt = icon.file;
       img.loading = 'lazy';
 
@@ -1228,7 +1229,7 @@
       if (element) element.classList.add('selected');
 
       const detail = document.getElementById('detail');
-      const imgSrc = ICONS_BASE + '/' + icon.file;
+      const imgSrc = iconUrl(icon.file);
       detail.querySelector('img').src = imgSrc;
       detail.querySelector('.name').textContent = getDisplayName(icon);
       detail.querySelector('.description').textContent = icon.description || '';
@@ -1463,7 +1464,7 @@
         slot.className = 'dice-slot';
 
         const img = document.createElement('img');
-        img.src = ICONS_BASE + '/' + icon.file;
+        img.src = iconUrl(icon.file);
         img.alt = getDisplayName(icon);
         img.title = getDisplayName(icon);
         slot.appendChild(img);
