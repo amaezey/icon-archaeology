@@ -19,46 +19,79 @@ from pathlib import Path
 from time import sleep
 
 # Paths (hardcoded for this project)
-ICONS_DIR = Path("/Users/mae/Documents/Inspo space/public/icons/extracted-transparent")
-TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/tags.json")
+ICONS_DIR = Path("/Users/mae/Documents/icon-archaeology/public/icons")
+TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/public/tags.json")
 
 # Config
 BATCH_SIZE = 10  # Stay under API limits
 MODEL = "claude-sonnet-4-20250514"
 
-TAXONOMY = {
-    "primary": ["food", "character", "animal", "folder", "hardware", "ui", "object", "vehicle", "nature", "symbol", "text"],
-    "secondary": ["cute", "retro", "holiday", "christmas", "gaming", "japanese", "portrait", "scifi", "fantasy", "horror", "music", "art", "sports", "kitchen", "office", "science", "military", "fashion"],
-    "vibes": ["playful", "technical", "spooky", "cozy", "elegant", "quirky", "minimal", "retro"]
-}
+CATEGORIES = ["character", "food", "hardware", "object", "symbol"]
+
+# Existing tags in the gallery — use these plus invent new ones where needed
+KNOWN_TAGS = [
+    "3d", "60s", "90s", "abstract", "adventure", "advertising", "aeonflux", "alien",
+    "american", "ancient", "animal", "animaniacs", "animation", "anime", "apple",
+    "aqua", "aquarium", "archie", "art", "astronomy", "audio", "australia", "autumn",
+    "aviation", "bakery", "batman", "beatles", "bento", "book", "botanical", "bread",
+    "breakfast", "british", "cafe", "cake", "candy", "cartoon", "cat", "celtic",
+    "cereal", "charliebrown", "cheese", "children", "chinese", "christmas", "cinema",
+    "citrus", "classic", "claymation", "cleaning", "climbing", "clone", "coatofarms",
+    "coffee", "cold", "comics", "communication", "cooking", "copland", "cowboy",
+    "creative", "creature", "cultural", "curry", "cute", "czech", "dairy", "dc",
+    "deli", "design", "dessert", "diablo", "dinner", "disney", "donuts", "dreamcast",
+    "drink", "drseuss", "euro2000", "european", "eworld", "fall", "fantasy", "fashion",
+    "fastfood", "february", "fighting", "film", "fish", "fishing", "flintstones",
+    "flowers", "folder", "food", "football", "fox", "fruit", "fujiya", "furby",
+    "gaming", "garfield", "geometric", "glossy", "graffiti", "guitar", "haagendazs",
+    "halloween", "handdrawn", "handheld", "hannabarbera", "hardware", "healthy",
+    "heraldry", "hiking", "holiday", "horror", "household", "humor", "ibook",
+    "icecream", "illustration", "imac", "indigenous", "industrial", "insignia",
+    "instrument", "interface", "internet", "irish", "italian", "japanese", "jleague",
+    "kaiju", "katsu", "kids", "kitchen", "korean", "laptop", "looneytunes", "love",
+    "lucasfilm", "lure", "m68k", "mac", "macos", "manga", "matrix", "meal", "mecha",
+    "medieval", "military", "minimal", "monster", "morning", "mortalkombat", "motorola",
+    "mountain", "mtv", "muppets", "music", "mystery", "nasa", "nature", "newton",
+    "newyear", "nickelodeon", "nintendo", "noodles", "nostalgia", "october", "office",
+    "okashi", "olympics", "online", "osechi", "osx", "outdoor", "palm", "pbs", "pda",
+    "peanuts", "pet", "pie", "pizza", "planets", "plant", "pokemon", "popeye",
+    "portrait", "powerpc", "premierleague", "produce", "quiet", "renandstimpy",
+    "retro", "robot", "rpg", "science", "scifi", "season", "sega", "seriea",
+    "sesamestreet", "simpsons", "sketch", "snacks", "snow", "soccer", "sonic", "sony",
+    "southamerican", "space", "speedracer", "spooky", "sports", "spring", "startrek",
+    "starwars", "stationery", "storage", "stpatricks", "strategy", "streetfood",
+    "studio", "summer", "superhero", "sushi", "sweets", "sydney2000", "symbol",
+    "tea", "technical", "thunderbirds", "tokusatsu", "tools", "toy", "traditional",
+    "tv", "ui", "ultraman", "urban", "valentine", "valentines", "vegetables",
+    "vegetarian", "vehicle", "video", "videogame", "vintage", "wagashi",
+    "wallaceandgromit", "warehouse", "warnerbros", "wb", "western", "winter",
+    "writing", "yosemite"
+]
 
 TAXONOMY_PROMPT = """Analyze these classic Mac OS icons and tag each one.
 
 For each icon, provide:
-1. **primary**: Main category (pick ONE):
-   - food (meals, ingredients, desserts, drinks)
-   - character (people, cartoon characters, mascots, portraits)
-   - animal (creatures, pets, wildlife)
-   - folder (Mac folders, directories)
-   - hardware (computers, consoles, peripherals, devices)
-   - ui (interface elements, controls, system icons, buttons)
-   - object (misc physical things, tools, household items)
-   - vehicle (cars, ships, planes, spacecraft)
-   - nature (plants, weather, landscapes, planets)
-   - symbol (flags, logos, abstract shapes, icons)
-   - text (attribution, copyright, mostly text)
+1. **description**: Brief phrase (3-8 words) describing WHAT the icon depicts. Be specific and literal.
+   Examples: "yellow smiley face with sunglasses", "blue folder with red apple logo", "cartoon cat face winking"
 
-2. **secondary**: Additional tags (pick 0-3 from):
-   - cute, retro, holiday, christmas, gaming, japanese,
-   - portrait, scifi, fantasy, horror, music, art, sports,
-   - kitchen, office, science, military, fashion
+2. **category**: Main category (pick exactly ONE):
+   - character (people, cartoon characters, mascots, portraits, animals, creatures)
+   - food (meals, ingredients, desserts, drinks, kitchen items)
+   - hardware (computers, consoles, peripherals, devices, cables)
+   - object (misc physical things, tools, household items, folders, vehicles, nature, plants, UI elements)
+   - symbol (flags, logos, abstract shapes, signs, text, attribution)
 
-3. **colors**: 1-2 dominant colors (lowercase)
+3. **themes**: Tags describing what the icon is about. Use 3-8 tags per icon. Be specific and generous.
+   Use existing tags where they fit: """ + ", ".join(KNOWN_TAGS[:100]) + """...
+   But also invent new specific tags when needed (e.g., a Scooby-Doo icon should get "scoobydoo", a Matrix icon should get "matrix").
+   Tags should be lowercase, no spaces, descriptive. More specific is better than generic.
 
-4. **vibe**: One word (playful, technical, spooky, cozy, elegant, quirky, minimal, retro)
+4. **vibes**: 1-3 mood/aesthetic words. Can be anything — playful, technical, spooky, cozy, elegant, quirky, minimal, retro, cheerful, mysterious, fierce, heroic, etc.
+
+5. **colors**: 1-3 dominant colors (lowercase)
 
 Respond with JSON array, one object per icon in order shown:
-[{"file": "filename.png", "primary": "...", "secondary": ["..."], "colors": ["..."], "vibe": "..."}]
+[{"file": "filename.png", "description": "...", "category": "...", "themes": ["..."], "vibes": ["..."], "colors": ["..."]}]
 
 Only output the JSON array, no other text."""
 
@@ -164,17 +197,31 @@ def main():
     all_files = sorted(list(ICONS_DIR.glob("*.png")))
     tags["total"] = len(all_files)
 
-    # Build set of already-tagged files
-    tagged_set = set(tags.get("tagged_files", []))
+    # Build set of fully-tagged files (have both tags AND description)
+    tagged_set = set()
+    needs_retag = set()  # tagged but missing description
 
-    # Also check icons array for backwards compatibility
     for icon in tags.get("icons", []):
-        tagged_set.add(icon["file"])
+        if icon.get("description"):
+            tagged_set.add(icon["file"])
+        else:
+            needs_retag.add(icon["file"])
+
+    # Also include tagged_files list for backwards compat
+    for f in tags.get("tagged_files", []):
+        if f not in tagged_set and f not in needs_retag:
+            tagged_set.add(f)
+
+    # Remove incomplete entries so they get re-tagged with descriptions
+    if needs_retag:
+        tags["icons"] = [i for i in tags["icons"] if i["file"] not in needs_retag]
+        tags["tagged_files"] = [f for f in tags.get("tagged_files", []) if f not in needs_retag]
+        print(f"Re-tagging {len(needs_retag)} icons missing descriptions")
 
     # Ensure tagged_files is in sync
     tags["tagged_files"] = sorted(list(tagged_set))
 
-    # Find remaining files
+    # Find remaining files (untagged + needs retag)
     remaining = [f for f in all_files if f.name not in tagged_set]
 
     print(f"Total icons: {len(all_files)}")

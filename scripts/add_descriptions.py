@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 from time import sleep
 
-ICONS_DIR = Path("/Users/mae/Documents/Inspo space/public/icons/extracted-transparent")
-TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/tags.json")
+ICONS_DIR = Path("/Users/mae/Documents/icon-archaeology/public/icons")
+TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/public/tags.json")
 
 BATCH_SIZE = 10
 MODEL = "claude-sonnet-4-20250514"

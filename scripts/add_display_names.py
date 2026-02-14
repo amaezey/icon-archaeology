@@ -8,8 +8,12 @@ import os
 import json
 from pathlib import Path
 
-SOURCE_DIR = Path("/Users/mae/Documents/Inspo space/Media/Icons")
-TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/tags.json")
+SOURCE_DIRS = [
+    Path("/Users/mae/Documents/icon-archaeology/sources"),
+    Path("/Users/mae/Documents/More icons to process"),
+    Path("/Users/mae/Documents/More icons to process/untitled folder"),
+]
+TAGS_FILE = Path("/Users/mae/Documents/icon-archaeology/public/tags.json")
 
 def sanitize_name(name):
     return ''.join(c if c.isalnum() or c in '-_' else '-' for c in name.lower()).strip('-')
@@ -19,34 +23,67 @@ def build_name_lookup():
     # Map: sanitized_name -> {display_name, path}
     lookup = {}
 
-    for icon_dir in SOURCE_DIR.rglob('*'):
-        if not icon_dir.is_dir():
-            continue
-        icon_file = icon_dir / "Icon\r"
-        rsrc_path = str(icon_file) + "/..namedfork/rsrc"
-        if not os.path.exists(rsrc_path):
+    for source_dir in SOURCE_DIRS:
+        if not source_dir.exists():
             continue
 
-        rel_parts = icon_dir.relative_to(SOURCE_DIR).parts
-        sanitized = sanitize_name(icon_dir.name)
+        for icon_dir in source_dir.rglob('*'):
+            if not icon_dir.is_dir():
+                continue
 
-        # Also build category--name key for direct matching
-        if len(rel_parts) >= 2:
-            category = sanitize_name(icon_dir.parent.name)
-            full_key = f"{category}--{sanitized}"
-            lookup[full_key] = {
-                'display_name': icon_dir.name,
-                'collection': icon_dir.parent.name,
-                'path': list(rel_parts)
-            }
+            # Check for Icon\r files (structured format)
+            icon_file = icon_dir / "Icon\r"
+            rsrc_path = str(icon_file) + "/..namedfork/rsrc"
+            has_icon_cr = os.path.exists(rsrc_path)
 
-        # Store by just sanitized name too (for fallback matching)
-        if sanitized not in lookup:
-            lookup[sanitized] = {
-                'display_name': icon_dir.name,
-                'collection': icon_dir.parent.name if len(rel_parts) >= 2 else '',
-                'path': list(rel_parts)
-            }
+            # Also check for individual files with resource forks
+            has_rsrc_files = False
+            if not has_icon_cr:
+                for item in icon_dir.iterdir():
+                    if item.is_file() and not item.name.startswith('.'):
+                        item_rsrc = str(item) + "/..namedfork/rsrc"
+                        if os.path.exists(item_rsrc):
+                            has_rsrc_files = True
+                            break
+
+            if not has_icon_cr and not has_rsrc_files:
+                continue
+
+            rel_parts = icon_dir.relative_to(source_dir).parts
+            sanitized = sanitize_name(icon_dir.name)
+
+            # Build category--name key for direct matching
+            if len(rel_parts) >= 2:
+                category = sanitize_name(icon_dir.parent.name)
+                full_key = f"{category}--{sanitized}"
+                lookup[full_key] = {
+                    'display_name': icon_dir.name,
+                    'collection': icon_dir.parent.name,
+                    'path': list(rel_parts)
+                }
+
+            # Store by just sanitized name too (for fallback matching)
+            if sanitized not in lookup:
+                lookup[sanitized] = {
+                    'display_name': icon_dir.name,
+                    'collection': icon_dir.parent.name if len(rel_parts) >= 2 else '',
+                    'path': list(rel_parts)
+                }
+
+            # For individual files inside this dir, add their names too
+            if has_rsrc_files:
+                collection_name = icon_dir.name
+                for item in icon_dir.iterdir():
+                    if item.is_file() and not item.name.startswith('.') and item.name != 'Icon\r':
+                        item_sanitized = sanitize_name(item.name)
+                        coll_sanitized = sanitize_name(collection_name)
+                        full_key = f"{coll_sanitized}--{item_sanitized}"
+                        if full_key not in lookup:
+                            lookup[full_key] = {
+                                'display_name': item.name,
+                                'collection': collection_name,
+                                'path': list(rel_parts) + [item.name]
+                            }
 
     return lookup
 

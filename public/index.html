@@ -1215,7 +1215,7 @@
       const name = document.createElement('div');
       name.className = 'name';
       name.textContent = getDisplayName(icon);
-      name.title = icon.description || (icon.path ? icon.path.join(' / ') : icon.file);
+      name.title = icon.description || icon.file;
 
       div.appendChild(img);
       div.appendChild(name);
@@ -1232,11 +1232,11 @@
       detail.querySelector('img').src = imgSrc;
       detail.querySelector('.name').textContent = getDisplayName(icon);
       detail.querySelector('.description').textContent = icon.description || '';
-      detail.querySelector('.breadcrumb').textContent = icon.path ? icon.path.join(' > ') : (icon.collection || '');
-      detail.querySelector('.primary-val').textContent = icon.category || icon.primary;
+      detail.querySelector('.breadcrumb').textContent = icon.collection || '';
+      detail.querySelector('.primary-val').textContent = icon.category;
       const allTags = [
-        ...(icon.themes || icon.secondary || []),
-        ...(icon.vibes || [icon.vibe]).filter(Boolean)
+        ...(icon.themes || []),
+        ...(icon.vibes || [])
       ];
       const uniqueTags = [...new Set(allTags)];
       detail.querySelector('.tags-val').textContent = uniqueTags.join(', ') || 'none';
@@ -1365,12 +1365,11 @@
             icon.file,
             icon.display_name || '',
             icon.collection || '',
-            icon.category || icon.primary,
-            ...(icon.vibes || [icon.vibe]),
+            icon.category,
+            ...(icon.vibes || []),
             icon.description || '',
-            ...(icon.themes || icon.secondary || []),
-            ...(icon.colors || []),
-            ...(icon.path || [])
+            ...(icon.themes || []),
+            ...(icon.colors || [])
           ].join(' ').toLowerCase();
           if (!haystack.includes(search)) return false;
         }
@@ -1385,8 +1384,7 @@
           const name = (icon.display_name || '').toLowerCase();
           const desc = (icon.description || '').toLowerCase();
           const collection = (icon.collection || '').toLowerCase();
-          const path = (icon.path || []).join(' ').toLowerCase();
-          const themes = (icon.themes || icon.secondary || []).join(' ').toLowerCase();
+          const themes = (icon.themes || []).join(' ').toLowerCase();
 
           // Exact name match = highest
           if (name === search) score += 100;
@@ -1398,7 +1396,6 @@
           if (desc.includes(search)) score += 40;
           // Collection/folder contains search
           if (collection.includes(search)) score += 30;
-          if (path.includes(search)) score += 25;
           // Theme/tag contains search
           if (themes.includes(search)) score += 20;
 

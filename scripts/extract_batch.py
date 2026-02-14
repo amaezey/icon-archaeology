@@ -2,9 +2,11 @@
 """
 Extract classic Mac OS icons from mixed source formats.
 
-This script handles both:
+This script handles:
 1. Structured folders with Icon\r files (e.g., fillerbunny ƒ/Vomit/Icon\r)
 2. Flat collections where files themselves have resource forks (e.g., ALIEN Icons/*)
+3. Collections using both formats simultaneously (e.g., Matrix icons)
+4. icns container resources (wrapping icl8/ICN#/l8mk data)
 
 The icons are extracted as 32x32 PNG files with transparency (when mask data exists).
 
@@ -139,8 +141,65 @@ def sanitize_name(name):
     return safe.strip('- ')
 
 
+def parse_icns_container(icns_data):
+    """Parse an icns container and return a dict of element type -> data.
+
+    The icns format is a simple container:
+    - 4 bytes: 'icns' magic
+    - 4 bytes: total length (big-endian)
+    - Repeated elements: 4-byte type + 4-byte length + data
+    """
+    import struct
+    elements = {}
+    pos = 0
+
+    if len(icns_data) >= 8 and icns_data[:4] == b'icns':
+        pos = 8
+
+    while pos < len(icns_data) - 8:
+        etype = icns_data[pos:pos+4]
+        elen = struct.unpack('>I', icns_data[pos+4:pos+8])[0]
+        if elen < 8 or elen > len(icns_data) - pos:
+            break
+        elements[etype] = icns_data[pos+8:pos+elen]
+        pos += elen
+
+    return elements
+
+
+def extract_from_icns(icns_data):
+    """Extract a 32x32 icon from an icns container.
+
+    Looks for icl8 (8-bit color) + ICN# or l8mk (mask) inside the container.
+    Prefers l8mk (8-bit alpha) over ICN# (1-bit mask) for smoother edges.
+    """
+    elements = parse_icns_container(icns_data)
+
+    icl8_data = elements.get(b'icl8')
+    if not icl8_data or len(icl8_data) < 1024:
+        return None
+
+    # Prefer l8mk (8-bit alpha mask) over ICN# (1-bit mask)
+    mask = None
+    l8mk_data = elements.get(b'l8mk')
+    if l8mk_data and len(l8mk_data) >= 1024:
+        mask = Image.new('L', (32, 32))
+        pixels = mask.load()
+        for y in range(32):
+            for x in range(32):
+                pixels[x, y] = l8mk_data[y * 32 + x]
+    else:
+        icn_data = elements.get(b'ICN#')
+        if icn_data:
+            mask = extract_mask_from_icn(icn_data)
+
+    return extract_icl8(icl8_data, mask)
+
+
 def extract_from_rsrc(rsrc_path, collection, icon_name):
     """Extract icon from a resource fork path.
+
+    Handles both direct icl8 resources and icns containers.
 
     Args:
         rsrc_path: Path to the resource fork (usually file/..namedfork/rsrc)
@@ -157,36 +216,45 @@ def extract_from_rsrc(rsrc_path, collection, icon_name):
             f.seek(0)
             rf = rsrcfork.ResourceFile(f)
 
-            if b'icl8' not in rf:
-                return None
+            # Try direct icl8 resources first (most common)
+            if b'icl8' in rf:
+                icn_masks = {}
+                l8mk_masks = {}
+                if b'ICN#' in rf:
+                    for res_id in rf[b'ICN#']:
+                        try:
+                            icn_masks[res_id] = rf[b'ICN#'][res_id].data
+                        except Exception:
+                            pass
 
-            # Get mask from ICN# resource if available
-            icn_masks = {}
-            if b'ICN#' in rf:
-                for res_id in rf[b'ICN#']:
+                for res_id in rf[b'icl8']:
                     try:
-                        icn_masks[res_id] = rf[b'ICN#'][res_id].data
+                        res = rf[b'icl8'][res_id]
+                        icl8_data = res.data
+
+                        if len(icl8_data) < 1024:
+                            continue
+
+                        mask = None
+                        if res_id in icn_masks:
+                            mask = extract_mask_from_icn(icn_masks[res_id])
+
+                        img = extract_icl8(icl8_data, mask)
+                        if img:
+                            return img
                     except Exception:
-                        pass
-
-            # Extract first icl8 resource
-            for res_id in rf[b'icl8']:
-                try:
-                    res = rf[b'icl8'][res_id]
-                    icl8_data = res.data
-
-                    if len(icl8_data) < 1024:
                         continue
 
-                    mask = None
-                    if res_id in icn_masks:
-                        mask = extract_mask_from_icn(icn_masks[res_id])
-
-                    img = extract_icl8(icl8_data, mask)
-                    if img:
-                        return img
-                except Exception:
-                    continue
+            # Try icns container resources (wraps icl8/ICN#/l8mk)
+            if b'icns' in rf:
+                for res_id in rf[b'icns']:
+                    try:
+                        icns_data = rf[b'icns'][res_id].data
+                        img = extract_from_icns(icns_data)
+                        if img:
+                            return img
+                    except Exception:
+                        continue
 
     except Exception:
         pass
@@ -224,73 +292,78 @@ def extract_all(source_dir, output_dir):
         print(f"\n=== {collection_dir.name} ===")
         collection_count = 0
 
-        # Check for Icon\r files (structured format)
-        icon_files = list(collection_dir.rglob('Icon\r'))
+        # Track which files we've already processed (avoid extracting Icon\r
+        # files twice — once as structured, once as flat)
+        processed_paths = set()
 
-        if icon_files:
-            # Structured format: icons stored in Icon\r files within folders
-            for icon_file in icon_files:
-                rsrc_path = str(icon_file) + "/..namedfork/rsrc"
-                if not os.path.exists(rsrc_path):
-                    continue
+        # Pass 1: Extract from Icon\r files (structured format)
+        for icon_file in collection_dir.rglob('Icon\r'):
+            processed_paths.add(icon_file.resolve())
 
-                # Get icon name from parent folder
-                icon_name = sanitize_name(icon_file.parent.name)
-                if not icon_name or icon_name.lower() in ['icon', 'icons']:
-                    icon_name = collection_name
+            rsrc_path = str(icon_file) + "/..namedfork/rsrc"
+            if not os.path.exists(rsrc_path):
+                continue
 
-                filename = f"{collection_name}--{icon_name}.png"
-                dest = output_dir / filename
+            # Get icon name from parent folder
+            icon_name = sanitize_name(icon_file.parent.name)
+            if not icon_name or icon_name.lower() in ['icon', 'icons']:
+                icon_name = collection_name
 
-                # Handle duplicates with numeric suffix
-                if dest.exists():
-                    i = 1
-                    while dest.exists():
-                        filename = f"{collection_name}--{icon_name}-{i}.png"
-                        dest = output_dir / filename
-                        i += 1
+            filename = f"{collection_name}--{icon_name}.png"
+            dest = output_dir / filename
 
-                img = extract_from_rsrc(rsrc_path, collection_name, icon_name)
-                if img:
-                    img.save(dest)
-                    extracted += 1
-                    collection_count += 1
-                else:
-                    skipped += 1
-        else:
-            # Flat format: files themselves have resource forks
-            for item in collection_dir.iterdir():
-                if item.is_dir():
-                    continue
-                if item.name.startswith('.'):
-                    continue
+            # Handle duplicates with numeric suffix
+            if dest.exists():
+                i = 1
+                while dest.exists():
+                    filename = f"{collection_name}--{icon_name}-{i}.png"
+                    dest = output_dir / filename
+                    i += 1
 
-                rsrc_path = str(item) + "/..namedfork/rsrc"
-                if not os.path.exists(rsrc_path):
-                    continue
+            img = extract_from_rsrc(rsrc_path, collection_name, icon_name)
+            if img:
+                img.save(dest)
+                extracted += 1
+                collection_count += 1
+            else:
+                skipped += 1
 
-                icon_name = sanitize_name(item.name)
-                if not icon_name:
-                    icon_name = "unnamed"
+        # Pass 2: Extract from individual files with resource forks
+        # Recurses into subfolders (e.g., Matrix icons/Morpheus/Neo)
+        for item in collection_dir.rglob('*'):
+            if item.is_dir():
+                continue
+            if item.name.startswith('.'):
+                continue
+            if item.resolve() in processed_paths:
+                continue
 
-                filename = f"{collection_name}--{icon_name}.png"
-                dest = output_dir / filename
+            rsrc_path = str(item) + "/..namedfork/rsrc"
+            if not os.path.exists(rsrc_path):
+                continue
 
-                # Handle duplicates with numeric suffix
-                if dest.exists():
-                    i = 1
-                    while dest.exists():
-                        filename = f"{collection_name}--{icon_name}-{i}.png"
-                        dest = output_dir / filename
-                        i += 1
+            icon_name = sanitize_name(item.name)
+            if not icon_name:
+                icon_name = "unnamed"
 
-                img = extract_from_rsrc(rsrc_path, collection_name, icon_name)
-                if img:
-                    img.save(dest)
-                    extracted += 1
-                    collection_count += 1
-                else:
-                    skipped += 1
+            filename = f"{collection_name}--{icon_name}.png"
+            dest = output_dir / filename
+
+            # Handle duplicates with numeric suffix
+            if dest.exists():
+                i = 1
+                while dest.exists():
+                    filename = f"{collection_name}--{icon_name}-{i}.png"
+                    dest = output_dir / filename
+                    i += 1
+
+            img = extract_from_rsrc(rsrc_path, collection_name, icon_name)
+            if img:
+                img.save(dest)
+                extracted += 1
+                collection_count += 1
+            else:
+                skipped += 1
 
         if collection_count > 0:
             print(f"  Extracted: {collection_count}")
