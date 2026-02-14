@@ -304,10 +304,14 @@ def extract_all(source_dir, output_dir):
             if not os.path.exists(rsrc_path):
                 continue
 
-            # Get icon name from parent folder
-            icon_name = sanitize_name(icon_file.parent.name)
-            if not icon_name or icon_name.lower() in ['icon', 'icons']:
-                icon_name = collection_name
+            # Build icon name from full path hierarchy (not just parent)
+            # This prevents collisions when many folders share a name
+            # e.g., Icon Collection/World Of Aqua 3/The Icons!/Drop Folder/Icon\r
+            #     → Icon Collection--World Of Aqua 3--The Icons--Drop Folder.png
+            rel = icon_file.relative_to(collection_dir)
+            parts = [sanitize_name(p) for p in rel.parts[:-1]]  # Exclude "Icon\r"
+            parts = [p for p in parts if p and p.lower() not in ('icon', 'icons')]
+            icon_name = '--'.join(parts) if parts else collection_name
 
             filename = f"{collection_name}--{icon_name}.png"
             dest = output_dir / filename
@@ -342,9 +346,11 @@ def extract_all(source_dir, output_dir):
             if not os.path.exists(rsrc_path):
                 continue
 
-            icon_name = sanitize_name(item.name)
-            if not icon_name:
-                icon_name = "unnamed"
+            # Build icon name from full relative path (not just filename)
+            rel = item.relative_to(collection_dir)
+            parts = [sanitize_name(p) for p in rel.parts]
+            parts = [p for p in parts if p and p.lower() not in ('icon', 'icons')]
+            icon_name = '--'.join(parts) if parts else 'unnamed'
 
             filename = f"{collection_name}--{icon_name}.png"
             dest = output_dir / filename

@@ -3,3 +3,14 @@
 
 # Intermediate processing files (keep only tags.json)
 public/tags-*.json
+public/tags.json.bak*
+
+# Staging directory (temp extraction output)
+staging/
+
+# Stale root-level files
+tags.json
+tea-time-check.png
+
+# Local Netlify folder
+.netlify
